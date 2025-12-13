@@ -20,7 +20,7 @@ export const logout = () => {
   const DOMAIN = "v4-hrms-auth.auth.us-east-1.amazoncognito.com";
 
   // Use ONLY root because that is allowed in Cognito settings
-  const REDIRECT = "http://localhost:5173";
+  const REDIRECT = window.location.origin;
 
   const url = `https://${DOMAIN}/logout?client_id=${CLIENT_ID}&logout_uri=${encodeURIComponent(
     REDIRECT
