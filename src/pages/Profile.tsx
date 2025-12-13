@@ -17,8 +17,13 @@ import { User, Pencil, Save, X } from "lucide-react";
 
 export default function Profile() {
   const { employee } = useAuth();
+
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const [form, setForm] = useState<any>({});
 
@@ -45,6 +50,8 @@ export default function Profile() {
     }
   }, [employee]);
 
+  if (!employee) return null;
+
   const handleChange = (e: any) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -53,6 +60,7 @@ export default function Profile() {
   =========================== */
   const saveProfile = async () => {
     setSaving(true);
+    setMessage(null);
 
     try {
       await api.post("/profile/register", {
@@ -64,17 +72,21 @@ export default function Profile() {
         },
       });
 
-      alert("Profile updated successfully!");
-      window.location.reload();
+      setMessage({
+        type: "success",
+        text: "Profile updated successfully",
+      });
+      setIsEditing(false);
     } catch (err) {
       console.error(err);
-      alert("Update failed");
+      setMessage({
+        type: "error",
+        text: "Profile update failed",
+      });
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
   };
-
-  if (!employee) return null;
 
   const bank = employee.bankAccount || {};
 
@@ -83,14 +95,18 @@ export default function Profile() {
   =========================== */
   const view = (label: string, value: any) => (
     <div className="space-y-1">
-      <Label className="text-gray-600 text-sm">{label}</Label>
+      <Label className="text-xs text-muted-foreground">
+        {label}
+      </Label>
       <p className="font-medium">{value || "—"}</p>
     </div>
   );
 
   const edit = (label: string, key: string, type = "text") => (
-    <div className="flex flex-col space-y-1">
-      <Label className="text-gray-600 text-sm">{label}</Label>
+    <div className="space-y-1">
+      <Label className="text-xs text-muted-foreground">
+        {label}
+      </Label>
       <Input
         name={key}
         type={type}
@@ -101,28 +117,46 @@ export default function Profile() {
   );
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <Card className="shadow-sm">
+    <div className="max-w-4xl mx-auto space-y-6">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div className="flex items-center gap-3">
-            <User className="w-10 h-10 text-blue-600" />
-            <CardTitle className="text-2xl">Employee Profile</CardTitle>
+            <User className="h-8 w-8 text-emerald-700" />
+            <CardTitle className="text-2xl">
+              Employee Profile
+            </CardTitle>
           </div>
 
           {!isEditing ? (
-            <Button onClick={() => setIsEditing(true)} variant="outline">
-              <Pencil className="w-4 h-4 mr-2" /> Edit
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditing(true);
+                setMessage(null);
+              }}
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button onClick={saveProfile} disabled={saving}>
-                <Save className="w-4 h-4 mr-2" /> Save
+              <Button
+                onClick={saveProfile}
+                disabled={saving}
+                className="bg-emerald-700 hover:bg-emerald-800"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {saving ? "Saving…" : "Save"}
               </Button>
               <Button
-                variant="secondary"
-                onClick={() => setIsEditing(false)}
+                variant="outline"
+                onClick={() => {
+                  setIsEditing(false);
+                  setMessage(null);
+                }}
               >
-                <X className="w-4 h-4 mr-2" /> Cancel
+                <X className="mr-2 h-4 w-4" />
+                Cancel
               </Button>
             </div>
           )}
@@ -130,11 +164,10 @@ export default function Profile() {
 
         <Separator />
 
-        <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* LEFT COLUMN */}
+        <CardContent className="pt-6 grid grid-cols-1 gap-8 md:grid-cols-2">
+          {/* LEFT */}
           <div className="space-y-6">
-            <h2 className="font-semibold text-lg text-blue-700">
+            <h2 className="font-semibold text-lg text-emerald-700">
               Personal Details
             </h2>
 
@@ -149,7 +182,7 @@ export default function Profile() {
             ) : (
               <>
                 {edit("Name", "name")}
-                {edit("DOB (DDMMYYYY)", "dob")}
+                {edit("DOB", "dob")}
                 {edit("Gender", "gender")}
                 {edit("Address", "address")}
               </>
@@ -157,7 +190,7 @@ export default function Profile() {
 
             <Separator />
 
-            <h2 className="font-semibold text-lg text-blue-700">
+            <h2 className="font-semibold text-lg text-emerald-700">
               Employment
             </h2>
 
@@ -174,9 +207,9 @@ export default function Profile() {
             )}
           </div>
 
-          {/* RIGHT COLUMN */}
+          {/* RIGHT */}
           <div className="space-y-6">
-            <h2 className="font-semibold text-lg text-blue-700">
+            <h2 className="font-semibold text-lg text-emerald-700">
               Banking Info
             </h2>
 
@@ -200,16 +233,32 @@ export default function Profile() {
 
             <Separator />
 
-            <h2 className="font-semibold text-lg text-blue-700">
+            <h2 className="font-semibold text-lg text-emerald-700">
               System Info
             </h2>
 
-            {view("Employee ID", employee.employeeID || employee.EmployeeID)}
+            {view(
+              "Employee ID",
+              employee.employeeID || employee.EmployeeID
+            )}
             {view("Created At", employee.createdAt)}
             {view("Updated At", employee.updatedAt)}
           </div>
         </CardContent>
       </Card>
+
+      {/* Status message */}
+      {message && (
+        <p
+          className={`text-sm ${
+            message.type === "success"
+              ? "text-emerald-700"
+              : "text-destructive"
+          }`}
+        >
+          {message.text}
+        </p>
+      )}
     </div>
   );
 }

@@ -1,15 +1,32 @@
-// src/pages/Attendance/AttendanceHistory.tsx
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar } from "lucide-react";
 
 export default function AttendanceHistory() {
   const today = new Date();
+
   const [month, setMonth] = useState(today.getMonth() + 1);
   const [year, setYear] = useState(today.getFullYear());
 
   const [records, setRecords] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setLoading(true);
@@ -17,77 +34,129 @@ export default function AttendanceHistory() {
       const res = await api.get(
         `/attendance/history?month=${month}&year=${year}`
       );
-      setRecords(res.data);
+      setRecords(res.data || []);
     } catch (err) {
       console.error(err);
+      setRecords([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
     load();
   }, []);
 
-  const computeHours = (ci: string, co: string) => {
-    if (!ci || !co) return "-";
+  const computeHours = (ci?: string, co?: string) => {
+    if (!ci || !co) return "—";
     const start = new Date(`2025-01-01T${ci}`);
     const end = new Date(`2025-01-01T${co}`);
     const diff = (end.getTime() - start.getTime()) / 36e5;
-    return diff.toFixed(2) + " hrs";
+    return `${diff.toFixed(2)} hrs`;
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold mb-4">Attendance History</h1>
-
-      <div className="flex gap-4 mb-6">
-        <input
-          type="number"
-          className="border p-2 rounded w-24"
-          min={1}
-          max={12}
-          value={month}
-          onChange={(e) => setMonth(Number(e.target.value))}
-        />
-
-        <input
-          type="number"
-          className="border p-2 rounded w-28"
-          value={year}
-          onChange={(e) => setYear(Number(e.target.value))}
-        />
-
-        <Button onClick={load}>Search</Button>
+    <div className="space-y-6">
+      {/* Page header */}
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Attendance History
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          View your past attendance records
+        </p>
       </div>
 
-      {loading ? (
-        <p>Loading…</p>
-      ) : records.length === 0 ? (
-        <p>No records found.</p>
-      ) : (
-        <table className="w-full border bg-white">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="p-2 text-left">Date</th>
-              <th className="p-2 text-left">Check-In</th>
-              <th className="p-2 text-left">Check-Out</th>
-              <th className="p-2 text-left">Hours</th>
-            </tr>
-          </thead>
-          <tbody>
-            {records.map((r) => (
-              <tr key={r.Date} className="border-b">
-                <td className="p-2">{r.Date}</td>
-                <td className="p-2">{r.CheckIn || "—"}</td>
-                <td className="p-2">{r.CheckOut || "—"}</td>
-                <td className="p-2">
-                  {computeHours(r.CheckIn, r.CheckOut)}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      {/* Filters */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Calendar className="h-4 w-4 text-emerald-600" />
+            Filter by month
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="flex gap-3">
+            <Input
+              type="number"
+              min={1}
+              max={12}
+              value={month}
+              onChange={(e) => setMonth(Number(e.target.value))}
+              className="w-24"
+              placeholder="Month"
+            />
+            <Input
+              type="number"
+              value={year}
+              onChange={(e) => setYear(Number(e.target.value))}
+              className="w-28"
+              placeholder="Year"
+            />
+          </div>
+
+          <Button
+            onClick={load}
+            className="bg-emerald-700 hover:bg-emerald-800"
+          >
+            Search
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Table */}
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Check-In</TableHead>
+                  <TableHead>Check-Out</TableHead>
+                  <TableHead>Hours</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {loading &&
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell colSpan={4}>
+                        <Skeleton className="h-8 w-full" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+                {!loading && records.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="py-8 text-center text-sm text-muted-foreground"
+                    >
+                      No attendance records found
+                    </TableCell>
+                  </TableRow>
+                )}
+
+                {!loading &&
+                  records.map((r) => (
+                    <TableRow key={r.Date}>
+                      <TableCell className="font-medium">
+                        {r.Date}
+                      </TableCell>
+                      <TableCell>{r.CheckIn || "—"}</TableCell>
+                      <TableCell>{r.CheckOut || "—"}</TableCell>
+                      <TableCell>
+                        {computeHours(r.CheckIn, r.CheckOut)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,70 +1,197 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ClipboardCheck } from "lucide-react";
+
 export default function AdminLeaveRequests() {
   const [leaves, setLeaves] = useState<any[]>([]);
-
-  const load = async () => {
-    const res = await api.get("/leave/admin/history");
-    setLeaves(res.data || []);
-  };
+  const [loading, setLoading] = useState(true);
+  const [acting, setActing] = useState<string | null>(null);
 
   useEffect(() => {
     load();
   }, []);
 
-  const act = async (LeaveID: string, action: "APPROVE" | "REJECT") => {
-    await api.post("/leave/approve", { LeaveID, action });
-    load();
+  const load = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/leave/admin/history");
+      setLeaves(res.data || []);
+    } catch (e) {
+      console.error("Failed to load admin leave history", e);
+      setLeaves([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const act = async (
+    LeaveID: string,
+    action: "APPROVE" | "REJECT"
+  ) => {
+    setActing(LeaveID);
+    try {
+      await api.post("/leave/approve", {
+        LeaveID,
+        action,
+      });
+      await load();
+    } catch (e) {
+      console.error("Leave action failed", e);
+    } finally {
+      setActing(null);
+    }
+  };
+
+  const statusBadge = (status: string) => {
+    switch (status) {
+      case "APPROVED":
+        return (
+          <span className="rounded-md bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700">
+            Approved
+          </span>
+        );
+      case "REJECTED":
+        return (
+          <span className="rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
+            Rejected
+          </span>
+        );
+      default:
+        return (
+          <span className="rounded-md bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
+            Pending
+          </span>
+        );
+    }
   };
 
   return (
-    <div>
-      <h1 className="text-xl font-semibold mb-4">Leave Requests</h1>
+    <div className="space-y-6">
+      {/* Page header */}
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Leave Requests
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Review and take action on employee leave requests
+        </p>
+      </div>
 
-      <table className="w-full border">
-        <thead>
-          <tr className="bg-gray-100">
-            <th>Employee</th>
-            <th>Month</th>
-            <th>Type</th>
-            <th>Days</th>
-            <th>LOP</th>
-            <th>Status</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {leaves.map(l => (
-            <tr key={l.LeaveID} className="border-t">
-              <td>{l.EmployeeID}</td>
-              <td>{l.Month}</td>
-              <td>{l.leaveType}</td>
-              <td>{l.requestedDays}</td>
-              <td>{l.lopDays}</td>
-              <td>{l.status}</td>
-              <td className="space-x-2">
-                {l.status === "PENDING" && (
-                  <>
-                    <button
-                      className="text-green-600"
-                      onClick={() => act(l.LeaveID, "APPROVE")}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ClipboardCheck className="h-4 w-4 text-emerald-600" />
+            Pending & Processed Requests
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Employee</TableHead>
+                  <TableHead>Month</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Days</TableHead>
+                  <TableHead>LOP</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">
+                    Action
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {loading &&
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell colSpan={7}>
+                        <Skeleton className="h-8 w-full" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+                {!loading && leaves.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="py-8 text-center text-sm text-muted-foreground"
                     >
-                      Approve
-                    </button>
-                    <button
-                      className="text-red-600"
-                      onClick={() => act(l.LeaveID, "REJECT")}
-                    >
-                      Reject
-                    </button>
-                  </>
+                      No leave requests found
+                    </TableCell>
+                  </TableRow>
                 )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+
+                {!loading &&
+                  leaves.map((l) => (
+                    <TableRow key={l.LeaveID}>
+                      <TableCell className="font-mono text-xs">
+                        {l.EmployeeID}
+                      </TableCell>
+                      <TableCell>{l.Month}</TableCell>
+                      <TableCell>{l.leaveType}</TableCell>
+                      <TableCell>{l.requestedDays}</TableCell>
+                      <TableCell>{l.lopDays || "—"}</TableCell>
+                      <TableCell>
+                        {statusBadge(l.status)}
+                      </TableCell>
+                      <TableCell className="text-right space-x-2">
+                        {l.status === "PENDING" ? (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={acting === l.LeaveID}
+                              className="border-emerald-600 text-emerald-700 hover:bg-emerald-50"
+                              onClick={() =>
+                                act(l.LeaveID, "APPROVE")
+                              }
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={acting === l.LeaveID}
+                              className="border-red-600 text-red-700 hover:bg-red-50"
+                              onClick={() =>
+                                act(l.LeaveID, "REJECT")
+                              }
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

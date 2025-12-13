@@ -1,21 +1,20 @@
-// src/layout/MainLayout.tsx
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import { useState } from "react";
 
-export default function MainLayout({ children }: { children: any }) {
+export default function MainLayout({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar (desktop + mobile sliding) */}
+    <div className="flex h-screen bg-background text-foreground">
+      {/* Sidebar */}
       <Sidebar open={open} setOpen={setOpen} />
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
+      {/* Main content */}
+      <div className="flex flex-1 flex-col">
         <Navbar setOpen={setOpen} />
 
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto px-4 py-6 md:px-6">
           {children}
         </main>
       </div>

@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { api } from "../../lib/api";
+import { api } from "@/lib/api";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft, Save } from "lucide-react";
 
 export default function AdminEmployeeEdit() {
   const { employeeId } = useParams();
@@ -8,7 +19,10 @@ export default function AdminEmployeeEdit() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const [employee, setEmployee] = useState<any>(null);
 
@@ -17,7 +31,7 @@ export default function AdminEmployeeEdit() {
     pfApplicable: true,
     bankName: "",
     bankAccount: "",
-    ifsc: ""
+    ifsc: "",
   });
 
   useEffect(() => {
@@ -32,21 +46,26 @@ export default function AdminEmployeeEdit() {
       );
 
       if (!emp) {
-        setMessage("Employee not found");
+        setMessage({
+          type: "error",
+          text: "Employee not found",
+        });
         return;
       }
 
       setEmployee(emp);
-
       setForm({
         baseSalary: emp.baseSalary || 0,
         pfApplicable: emp.pfApplicable !== false,
         bankName: emp.bankAccount?.bankName || "",
         bankAccount: emp.bankAccount?.accountNumber || "",
-        ifsc: emp.bankAccount?.ifsc || ""
+        ifsc: emp.bankAccount?.ifsc || "",
       });
-    } catch (err) {
-      setMessage("Failed to load employee");
+    } catch {
+      setMessage({
+        type: "error",
+        text: "Failed to load employee details",
+      });
     } finally {
       setLoading(false);
     }
@@ -63,125 +82,203 @@ export default function AdminEmployeeEdit() {
         bankAccount: {
           bankName: form.bankName,
           accountNumber: form.bankAccount,
-          ifsc: form.ifsc
-        }
+          ifsc: form.ifsc,
+        },
       });
 
-      setMessage("Employee updated successfully");
+      setMessage({
+        type: "success",
+        text: "Employee updated successfully",
+      });
     } catch (err: any) {
-      setMessage(
-        err?.response?.data?.error || "Update failed"
-      );
+      setMessage({
+        type: "error",
+        text:
+          err?.response?.data?.error ||
+          "Failed to update employee",
+      });
     } finally {
       setSaving(false);
     }
   }
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="max-w-2xl space-y-4">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-56 w-full" />
+      </div>
+    );
+  }
 
-  if (!employee)
-    return <div className="text-red-600">{message}</div>;
+  if (!employee) {
+    return (
+      <p className="text-sm text-destructive">
+        {message?.text}
+      </p>
+    );
+  }
 
   return (
-    <div className="max-w-xl p-6">
-      <h1 className="text-xl font-bold mb-4">
-        Edit Employee
-      </h1>
-
-      {/* READ ONLY INFO */}
-      <div className="mb-4 text-sm text-gray-700">
-        <div><b>ID:</b> {employee.EmployeeID}</div>
-        <div><b>Name:</b> {employee.name}</div>
-        <div><b>Department:</b> {employee.department}</div>
-        <div><b>Designation:</b> {employee.designation}</div>
+    <div className="max-w-2xl space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Edit Employee
+        </h1>
       </div>
 
-      {/* BASE SALARY */}
-      <label className="block text-sm mb-1">
-        Base Salary
-      </label>
-      <input
-        type="number"
-        value={form.baseSalary}
-        onChange={(e) =>
-          setForm({
-            ...form,
-            baseSalary: Number(e.target.value)
-          })
-        }
-        className="border px-2 py-1 w-full mb-4"
-      />
+      {/* Read-only info */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Employee Information
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+          <div>
+            <span className="text-muted-foreground">
+              Employee ID
+            </span>
+            <div className="font-mono">
+              {employee.EmployeeID}
+            </div>
+          </div>
+          <div>
+            <span className="text-muted-foreground">
+              Name
+            </span>
+            <div>{employee.name}</div>
+          </div>
+          <div>
+            <span className="text-muted-foreground">
+              Department
+            </span>
+            <div>{employee.department}</div>
+          </div>
+          <div>
+            <span className="text-muted-foreground">
+              Designation
+            </span>
+            <div>{employee.designation}</div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* PF */}
-      <label className="flex items-center gap-2 mb-4">
-        <input
-          type="checkbox"
-          checked={form.pfApplicable}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              pfApplicable: e.target.checked
-            })
-          }
-        />
-        PF Applicable
-      </label>
+      {/* Salary & PF */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Salary Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">
+              Base Salary
+            </label>
+            <Input
+              type="number"
+              value={form.baseSalary}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  baseSalary: Number(e.target.value),
+                })
+              }
+            />
+          </div>
 
-      {/* BANK DETAILS */}
-      <h2 className="font-semibold mb-2">
-        Bank Details
-      </h2>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              checked={form.pfApplicable}
+              onCheckedChange={(checked: any) =>
+                setForm({
+                  ...form,
+                  pfApplicable: Boolean(checked),
+                })
+              }
+            />
+            <span className="text-sm">
+              PF applicable
+            </span>
+          </div>
+        </CardContent>
+      </Card>
 
-      <input
-        placeholder="Bank Name"
-        value={form.bankName}
-        onChange={(e) =>
-          setForm({ ...form, bankName: e.target.value })
-        }
-        className="border px-2 py-1 w-full mb-2"
-      />
+      {/* Bank details */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Bank Details
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Input
+            placeholder="Bank name"
+            value={form.bankName}
+            onChange={(e) =>
+              setForm({ ...form, bankName: e.target.value })
+            }
+          />
+          <Input
+            placeholder="Account number"
+            value={form.bankAccount}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                bankAccount: e.target.value,
+              })
+            }
+          />
+          <Input
+            placeholder="IFSC code"
+            value={form.ifsc}
+            onChange={(e) =>
+              setForm({ ...form, ifsc: e.target.value })
+            }
+          />
+        </CardContent>
+      </Card>
 
-      <input
-        placeholder="Account Number"
-        value={form.bankAccount}
-        onChange={(e) =>
-          setForm({
-            ...form,
-            bankAccount: e.target.value
-          })
-        }
-        className="border px-2 py-1 w-full mb-2"
-      />
-
-      <input
-        placeholder="IFSC Code"
-        value={form.ifsc}
-        onChange={(e) =>
-          setForm({ ...form, ifsc: e.target.value })
-        }
-        className="border px-2 py-1 w-full mb-4"
-      />
-
-      {/* ACTIONS */}
-      <div className="flex gap-3">
-        <button
+      {/* Actions */}
+      <div className="flex items-center gap-3">
+        <Button
           onClick={handleSave}
           disabled={saving}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          className="bg-emerald-700 hover:bg-emerald-800"
         >
-          {saving ? "Saving..." : "Save"}
-        </button>
+          <Save className="mr-2 h-4 w-4" />
+          {saving ? "Saving…" : "Save Changes"}
+        </Button>
 
-        <button
+        <Button
+          variant="outline"
           onClick={() => navigate(-1)}
-          className="px-4 py-2 border rounded"
         >
           Cancel
-        </button>
+        </Button>
       </div>
 
+      {/* Message */}
       {message && (
-        <p className="mt-4 text-sm">{message}</p>
+        <p
+          className={`text-sm ${
+            message.type === "success"
+              ? "text-emerald-700"
+              : "text-destructive"
+          }`}
+        >
+          {message.text}
+        </p>
       )}
     </div>
   );
