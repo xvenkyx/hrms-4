@@ -42,7 +42,7 @@ export function mapSlipToPDF(slip: any) {
     basic: Number(slip.basic ?? 0),
     hra: Number(slip.hra ?? 0),
     fuelAllowance: Number(slip.fuelAllowance ?? 0),
-    bonus: Number(slip.bonus ?? 0),
+    bonus: Number(slip.performanceBonus ?? 0),
 
     pfAmount: Number(slip.pfAmount ?? 0),
     professionalTax: Number(slip.professionalTax ?? 0),

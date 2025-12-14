@@ -23,6 +23,7 @@ import AdminEmployeeEdit from "./pages/Admin/AdminEmployeeEdit";
 import AdminLeaveRequests from "./pages/Leave/AdminLeaveRequests";
 import LeaveHistory from "./pages/Leave/LeaveHistory";
 import EmployeeLeave from "./pages/Leave/EmployeeLeave";
+import PerformanceBonus from "./pages/Performance/PerformanceBonus";
 
 export default function App() {
   const { roles } = useAuth();
@@ -103,6 +104,17 @@ export default function App() {
             </AdminRoute>
           }
         />
+        <Route
+          path="/performance/bonus"
+          element={
+            <AdminRoute>
+              <MainLayout>
+                <PerformanceBonus />
+              </MainLayout>
+            </AdminRoute>
+          }
+        />
+
         {/* Employee Salary History */}
         <Route
           path="/salary/history"

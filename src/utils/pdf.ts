@@ -1,10 +1,15 @@
 // utils/pdf.ts – Perfect payslip generator using HTML + window.print()
 
 export function generateSalaryPDF(slip: any) {
+  console.log("From generate : ", slip)
   const normalizedSlip = normalizeSlip(slip);
   const html = buildPayslipHTML(normalizedSlip);
 
-  const printWindow = window.open("about:blank", "_blank", "width=800,height=1000");
+  const printWindow = window.open(
+    "about:blank",
+    "_blank",
+    "width=800,height=1000"
+  );
 
   if (!printWindow) {
     alert("Popup blocked! Allow popups to download salary slip.");
@@ -24,6 +29,7 @@ export function generateSalaryPDF(slip: any) {
 
 /** Normalize slip values so nothing is undefined */
 function normalizeSlip(slip: any) {
+  console.log("From slip: ", slip.bonus)
   return {
     ...slip,
     basic: Number(slip.basic ?? 0),
@@ -35,7 +41,7 @@ function normalizeSlip(slip: any) {
     bonus: Number(slip.bonus ?? 0),
     daysInMonth: Number(slip.daysInMonth ?? 30),
     lopDays: Number(slip.lopDays ?? 0),
-    daysPresent: Number(slip.daysPresent ?? (slip.daysInMonth - slip.lopDays)),
+    daysPresent: Number(slip.daysPresent ?? slip.daysInMonth - slip.lopDays),
     totalEarning:
       Number(slip.basic ?? 0) +
       Number(slip.hra ?? 0) +
@@ -161,7 +167,9 @@ function buildPayslipHTML(slip: any) {
     <tr>
       <td><strong>Designation:</strong> ${slip.designation}</td>
       <td><strong>Department:</strong> ${slip.department}</td>
-      <td><strong>Total Salary:</strong> ₹${slip.baseSalary.toLocaleString("en-IN")}</td>
+      <td><strong>Total Salary:</strong> ₹${slip.baseSalary.toLocaleString(
+        "en-IN"
+      )}</td>
     </tr>
     <tr>
       <td><strong>UAN No:</strong> ${slip.uanNumber}</td>
@@ -175,7 +183,7 @@ function buildPayslipHTML(slip: any) {
       <td><strong>Total Days:</strong> ${slip.daysInMonth}</td>
       <td><strong>Days Present:</strong> ${slip.daysPresent}</td>
       <td><strong>Arrear Days:</strong> ${slip.arrearDays}</td>
-      <td><strong>LWP/Absent:</strong> ${slip.lopDays}.0</td>
+      <td><strong>LOP/Absent:</strong> ${slip.lopDays}.0</td>
     </tr>
   </table>
 
@@ -186,24 +194,42 @@ function buildPayslipHTML(slip: any) {
       <th class="right">Amount</th>
     </tr>
 
-    <tr><td>Basic</td><td class="right">₹${slip.basic.toLocaleString("en-IN")}</td></tr>
-    <tr><td>HRA</td><td class="right">₹${slip.hra.toLocaleString("en-IN")}</td></tr>
-    <tr><td>Fuel Allowance</td><td class="right">₹${slip.fuelAllowance.toLocaleString("en-IN")}</td></tr>
+    <tr><td>Basic</td><td class="right">₹${slip.basic.toLocaleString(
+      "en-IN"
+    )}</td></tr>
+    <tr><td>HRA</td><td class="right">₹${slip.hra.toLocaleString(
+      "en-IN"
+    )}</td></tr>
+    <tr><td>Fuel Allowance</td><td class="right">₹${slip.fuelAllowance.toLocaleString(
+      "en-IN"
+    )}</td></tr>
 
-    ${slip.bonus > 0 ? `
+    ${
+      slip.bonus > 0
+        ? `
       <tr>
         <td>Performance Incentive</td>
         <td class="right">₹${slip.bonus.toLocaleString("en-IN")}</td>
-      </tr>` : ""}
+      </tr>`
+        : ""
+    }
 
-    <tr><td>PF</td><td class="right">-₹${slip.pfAmount.toLocaleString("en-IN")}</td></tr>
-    <tr><td>PT</td><td class="right">-₹${slip.professionalTax.toLocaleString("en-IN")}</td></tr>
+    <tr><td>PF</td><td class="right">-₹${slip.pfAmount.toLocaleString(
+      "en-IN"
+    )}</td></tr>
+    <tr><td>PT</td><td class="right">-₹${slip.professionalTax.toLocaleString(
+      "en-IN"
+    )}</td></tr>
 
-    ${slip.absentDeduction > 0 ? `
+    ${
+      slip.absentDeduction > 0
+        ? `
       <tr>
         <td>Absent Deduction</td>
         <td class="right">-₹${slip.absentDeduction.toLocaleString("en-IN")}</td>
-      </tr>` : ""}
+      </tr>`
+        : ""
+    }
 
     <tr>
       <th>Total Earning</th>
@@ -229,11 +255,41 @@ function buildPayslipHTML(slip: any) {
 
 /* Convert number to words (Indian format) */
 function convertToWords(num: number) {
-  const a = ["", "one ", "two ", "three ", "four ", "five ", "six ", "seven ", "eight ", "nine ", "ten ",
-  "eleven ", "twelve ", "thirteen ", "fourteen ", "fifteen ", "sixteen ", "seventeen ",
-  "eighteen ", "nineteen "];
+  const a = [
+    "",
+    "one ",
+    "two ",
+    "three ",
+    "four ",
+    "five ",
+    "six ",
+    "seven ",
+    "eight ",
+    "nine ",
+    "ten ",
+    "eleven ",
+    "twelve ",
+    "thirteen ",
+    "fourteen ",
+    "fifteen ",
+    "sixteen ",
+    "seventeen ",
+    "eighteen ",
+    "nineteen ",
+  ];
 
-  const b = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"];
+  const b = [
+    "",
+    "",
+    "twenty",
+    "thirty",
+    "forty",
+    "fifty",
+    "sixty",
+    "seventy",
+    "eighty",
+    "ninety",
+  ];
 
   if (num === 0) return "ZERO ONLY";
 

@@ -29,7 +29,17 @@ export default function Sidebar({
         { label: "Employees", to: "/admin/employees", icon: Users2 },
         { label: "Leave Management", to: "/admin/leave", icon: ClipboardList },
         { label: "Attendance", to: "/admin/attendance", icon: Users2 },
-        { label: "Generate Salary", to: "/admin/salary/generate", icon: IndianRupee },
+        {
+          label: "Generate Salary",
+          to: "/admin/salary/generate",
+          icon: IndianRupee,
+        },
+        {
+          label: "Performance Bonus",
+          to: "/performance/bonus",
+          icon: IndianRupee,
+        },
+
         { label: "Salary History", to: "/admin/salary/history", icon: History },
         { label: "Profile", to: "/profile", icon: User },
       ]
@@ -38,7 +48,11 @@ export default function Sidebar({
         { label: "Today", to: "/attendance", icon: Clock },
         { label: "Apply Leave", to: "/leave", icon: Calendar },
         { label: "Leave History", to: "/leave/history", icon: History },
-        { label: "Attendance History", to: "/attendance/history", icon: History },
+        {
+          label: "Attendance History",
+          to: "/attendance/history",
+          icon: History,
+        },
         { label: "Salary", to: "/salary/history", icon: IndianRupee },
         { label: "Profile", to: "/profile", icon: User },
       ];
