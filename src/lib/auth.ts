@@ -15,9 +15,8 @@ export const getToken = (): string | null => {
 // src/lib/auth.ts
 export const logout = () => {
   localStorage.removeItem("v4_id_token");
-
-  const CLIENT_ID = "3pvv77hqh5608o5m7t1gdq93jg";
-  const DOMAIN = "v4-hrms-auth.auth.us-east-1.amazoncognito.com";
+  const CLIENT_ID = "5ee6nujtrapp818mchsmpj4248";
+  const DOMAIN = "v4-hrms-auth-new.auth.us-east-1.amazoncognito.com";
 
   // Use ONLY root because that is allowed in Cognito settings
   const REDIRECT = window.location.origin;
@@ -30,8 +29,8 @@ export const logout = () => {
 };
 
 export const decodeToken = (t: any) => {
-  const token2 = t
-  console.log(token2)
+  const token2 = t;
+  console.log(token2);
   const token = getToken();
   if (!token) return null;
   return jwtDecode<any>(token);
