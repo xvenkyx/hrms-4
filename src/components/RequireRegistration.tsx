@@ -1,7 +1,7 @@
 // src/components/RequireRegistration.tsx
 import { Navigate } from "react-router-dom";
-import { useAuth } from "src/context/AuthContext.tsx";
 import type { JSX } from "react";
+import { useAuth } from "../../src/context/AuthContext";
 
 export const RequireRegistration = ({
   children,
