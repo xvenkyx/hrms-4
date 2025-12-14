@@ -1,12 +1,11 @@
 // src/components/RequireRegistration.tsx
 import { Navigate } from "react-router-dom";
-import type { JSX } from "react";
-import { useAuth } from "../../src/context/AuthContext";
+import { useAuth } from "../context/AuthContext";
 
 export const RequireRegistration = ({
   children,
 }: {
-  children: JSX.Element;
+  children: React.ReactNode;
 }) => {
   const { loading, employee } = useAuth();
 
@@ -16,5 +15,5 @@ export const RequireRegistration = ({
     return <Navigate to="/register" replace />;
   }
 
-  return children;
+  return <>{children}</>;
 };
