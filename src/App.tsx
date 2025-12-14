@@ -24,6 +24,7 @@ import AdminLeaveRequests from "./pages/Leave/AdminLeaveRequests";
 import LeaveHistory from "./pages/Leave/LeaveHistory";
 import EmployeeLeave from "./pages/Leave/EmployeeLeave";
 import PerformanceBonus from "./pages/Performance/PerformanceBonus";
+import { RequireRegistration } from "./components/RequireRegistration";
 
 export default function App() {
   const { roles } = useAuth();
@@ -40,13 +41,15 @@ export default function App() {
           path="/"
           element={
             <ProtectedRoute>
-              <MainLayout>
-                {roles.includes("v4-admin") || roles.includes("v4-hr") ? (
-                  <AdminDashboard />
-                ) : (
-                  <EmployeeDashboard />
-                )}
-              </MainLayout>
+              <RequireRegistration>
+                <MainLayout>
+                  {roles.includes("v4-admin") || roles.includes("v4-hr") ? (
+                    <AdminDashboard />
+                  ) : (
+                    <EmployeeDashboard />
+                  )}
+                </MainLayout>
+              </RequireRegistration>
             </ProtectedRoute>
           }
         />

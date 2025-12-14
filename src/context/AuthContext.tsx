@@ -30,25 +30,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // --- PHASE 1: Read token from URL after Cognito redirect ---
+  // PHASE 1: Read token from Cognito redirect
   useEffect(() => {
     const hash = window.location.hash;
 
-    if (hash.includes("id_token") || hash.includes("access_token")) {
+    if (hash.includes("id_token")) {
       const params = new URLSearchParams(hash.replace("#", ""));
       const t = params.get("id_token");
 
       if (t) {
         saveToken(t);
         setToken(t);
-
-        // Clean URL
         window.history.replaceState({}, "", window.location.pathname);
       }
     }
   }, []);
 
-  // --- PHASE 2: Decode token & extract roles ---
+  // PHASE 2: Decode roles
   useEffect(() => {
     if (!token) {
       setRoles([]);
@@ -56,16 +54,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
-      const decoded = decodeToken(token);
-      const groups = decoded["cognito:groups"] || [];
-      setRoles(groups);
+      const decoded: any = decodeToken(token);
+      setRoles(decoded["cognito:groups"] || []);
     } catch (err) {
       console.error("Token decode failed:", err);
       setRoles([]);
     }
   }, [token]);
 
-  // --- PHASE 3: Fetch employee profile from backend ---
+  // PHASE 3: Fetch profile
   useEffect(() => {
     const init = async () => {
       if (!token) {
@@ -76,17 +73,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       try {
         const res = await api.get("/profile/me");
         setEmployee(res.data);
-
-        const rc = res?.data?.registrationComplete;
-
-        if (!rc && window.location.pathname !== "/register") {
-          window.location.href = "/register";
-        }
       } catch (err) {
         console.error("Profile fetch failed:", err);
+        setEmployee(null);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     init();
