@@ -6,7 +6,7 @@
 
 <h2>🚀 Demo</h2>
 
-[JHEX | HRMS](jhex.in)
+[JHEX | HRMS](https://jhex.in)
 
   
   
