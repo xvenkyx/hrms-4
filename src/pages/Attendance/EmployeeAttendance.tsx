@@ -8,12 +8,21 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, LogIn, LogOut } from "lucide-react";
+import { Clock, LogIn, LogOut, Loader2 } from "lucide-react";
 
 export default function EmployeeAttendance() {
+  // Holds today's attendance data from backend
   const [attendance, setAttendance] = useState<any>(null);
+
+  // Page-level loading (initial fetch)
   const [loading, setLoading] = useState(true);
 
+  // Action-level loading (check-in / check-out)
+  const [actionLoading, setActionLoading] = useState<
+    "checkin" | "checkout" | null
+  >(null);
+
+  // Fetch today's attendance
   const load = async () => {
     try {
       const res = await api.get("/attendance/me/today");
@@ -25,20 +34,46 @@ export default function EmployeeAttendance() {
     }
   };
 
+  // Load attendance on page mount
   useEffect(() => {
     load();
   }, []);
 
+  // Handle Check-In click
   const handleCheckIn = async () => {
-    await api.post("/attendance/checkin");
-    await load();
+    try {
+      // Mark check-in action as loading
+      setActionLoading("checkin");
+
+      // Call backend check-in API
+      await api.post("/attendance/checkin");
+
+      // Refresh attendance after success
+      await load();
+    } finally {
+      // Reset action loading state
+      setActionLoading(null);
+    }
   };
 
+  // Handle Check-Out click
   const handleCheckOut = async () => {
-    await api.post("/attendance/checkout");
-    await load();
+    try {
+      // Mark check-out action as loading
+      setActionLoading("checkout");
+
+      // Call backend check-out API
+      await api.post("/attendance/checkout");
+
+      // Refresh attendance after success
+      await load();
+    } finally {
+      // Reset action loading state
+      setActionLoading(null);
+    }
   };
 
+  // Skeleton UI while page is loading
   if (loading) {
     return (
       <div className="max-w-xl space-y-4">
@@ -49,6 +84,7 @@ export default function EmployeeAttendance() {
     );
   }
 
+  // Extract check-in / check-out times
   const checkedIn = attendance?.CheckIn;
   const checkedOut = attendance?.CheckOut;
 
@@ -72,26 +108,22 @@ export default function EmployeeAttendance() {
             Status
           </CardTitle>
         </CardHeader>
+
         <CardContent className="space-y-3 text-sm">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">
-              Check-In
-            </span>
+            <span className="text-muted-foreground">Check-In</span>
             <span className="font-medium">
               {checkedIn || "—"}
             </span>
           </div>
 
           <div className="flex justify-between">
-            <span className="text-muted-foreground">
-              Check-Out
-            </span>
+            <span className="text-muted-foreground">Check-Out</span>
             <span className="font-medium">
               {checkedOut || "—"}
             </span>
           </div>
 
-          {/* Status message */}
           {checkedIn && !checkedOut && (
             <p className="pt-2 text-sm text-emerald-700">
               You are currently checked in
@@ -106,25 +138,45 @@ export default function EmployeeAttendance() {
         </CardContent>
       </Card>
 
-      {/* Actions */}
+      {/* Action buttons */}
       <div className="flex gap-4">
+        {/* Check-In Button */}
         <Button
-          disabled={checkedIn}
+          disabled={checkedIn || actionLoading !== null}
           onClick={handleCheckIn}
           className="flex-1 bg-emerald-700 hover:bg-emerald-800"
         >
-          <LogIn className="mr-2 h-4 w-4" />
-          {checkedIn ? "Checked In" : "Check In"}
+          {actionLoading === "checkin" ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Checking In...
+            </>
+          ) : (
+            <>
+              <LogIn className="mr-2 h-4 w-4" />
+              {checkedIn ? "Checked In" : "Check In"}
+            </>
+          )}
         </Button>
 
+        {/* Check-Out Button */}
         <Button
-          disabled={!checkedIn || checkedOut}
+          disabled={!checkedIn || checkedOut || actionLoading !== null}
           onClick={handleCheckOut}
           variant="outline"
           className="flex-1 border-emerald-600 text-emerald-700 hover:bg-emerald-50"
         >
-          <LogOut className="mr-2 h-4 w-4" />
-          {checkedOut ? "Checked Out" : "Check Out"}
+          {actionLoading === "checkout" ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Checking Out...
+            </>
+          ) : (
+            <>
+              <LogOut className="mr-2 h-4 w-4" />
+              {checkedOut ? "Checked Out" : "Check Out"}
+            </>
+          )}
         </Button>
       </div>
     </div>
