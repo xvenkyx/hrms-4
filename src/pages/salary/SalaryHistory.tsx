@@ -3,16 +3,11 @@ import { api } from "@/lib/api";
 import { generateSalaryPDF } from "@/utils/pdf";
 import { mapSlipToPDF } from "@/utils/mapSlipToPDF";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, IndianRupee, Calendar } from "lucide-react";
+import { Download, IndianRupee, Calendar, RefreshCcw } from "lucide-react";
 
 export default function SalaryHistory() {
   const [slips, setSlips] = useState<any[]>([]);
@@ -39,19 +34,31 @@ export default function SalaryHistory() {
 
   function handleView() {
     const slip = slips.find((s) => s.Month === month);
+    console.log(slip)
     setSelectedSlip(slip || null);
   }
 
   return (
     <div className="max-w-4xl space-y-6">
       {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          My Salary
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          View and download your monthly salary slips
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">My Salary</h1>
+          <p className="text-sm text-muted-foreground">
+            View and download your monthly salary slips
+          </p>
+        </div>
+
+        {/* Refresh Button */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={loadHistory}
+          disabled={loading}
+          title="Refresh salary history"
+        >
+          <RefreshCcw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+        </Button>
       </div>
 
       {/* Month selector */}
@@ -112,35 +119,22 @@ export default function SalaryHistory() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
               <div>
-                <span className="text-muted-foreground">
-                  Net Salary
-                </span>
+                <span className="text-muted-foreground">Net Salary</span>
                 <div className="text-lg font-semibold">
-                  ₹
-                  {selectedSlip.netSalary.toLocaleString(
-                    "en-IN"
-                  )}
+                  ₹{selectedSlip.netSalary.toLocaleString("en-IN")}
                 </div>
               </div>
 
               <div>
-                <span className="text-muted-foreground">
-                  Generated On
-                </span>
+                <span className="text-muted-foreground">Generated On</span>
                 <div>
-                  {new Date(
-                    selectedSlip.generatedAt
-                  ).toLocaleDateString()}
+                  {new Date(selectedSlip.generatedAt).toLocaleDateString()}
                 </div>
               </div>
             </div>
 
             <Button
-              onClick={() =>
-                generateSalaryPDF(
-                  mapSlipToPDF(selectedSlip)
-                )
-              }
+              onClick={() => generateSalaryPDF(mapSlipToPDF(selectedSlip))}
               className="bg-emerald-700 hover:bg-emerald-800"
             >
               <Download className="mr-2 h-4 w-4" />
