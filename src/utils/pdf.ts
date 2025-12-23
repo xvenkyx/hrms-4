@@ -1,7 +1,6 @@
 // utils/pdf.ts – Perfect payslip generator using HTML + window.print()
 
 export function generateSalaryPDF(slip: any) {
-  console.log("From generate : ", slip)
   const normalizedSlip = normalizeSlip(slip);
   const html = buildPayslipHTML(normalizedSlip);
 
@@ -29,26 +28,51 @@ export function generateSalaryPDF(slip: any) {
 
 /** Normalize slip values so nothing is undefined */
 function normalizeSlip(slip: any) {
-  console.log("From slip: ", slip.bonus)
+  const basic = Number(slip.basic ?? 0);
+  const hra = Number(slip.hra ?? 0);
+  const fuelAllowance = Number(slip.fuelAllowance ?? 0);
+
+  // Backend sends performanceBonus, PDF expects bonus
+  const bonus = Number(slip.bonus ?? slip.performanceBonus ?? 0);
+
+  const pfAmount = Number(slip.pfAmount ?? 0);
+  const professionalTax = Number(slip.professionalTax ?? 0);
+  const absentDeduction = Number(slip.absentDeduction ?? 0);
+
+  const totalEarning = basic + hra + fuelAllowance + bonus;
+
+  const totalDeduction = pfAmount + professionalTax + absentDeduction;
+
+  const netSalary = Number(slip.netSalary ?? 0);
+
   return {
     ...slip,
-    basic: Number(slip.basic ?? 0),
-    hra: Number(slip.hra ?? 0),
-    fuelAllowance: Number(slip.fuelAllowance ?? 0),
-    pfAmount: Number(slip.pfAmount ?? 0),
-    professionalTax: Number(slip.professionalTax ?? 0),
-    absentDeduction: Number(slip.absentDeduction ?? 0),
-    bonus: Number(slip.bonus ?? 0),
+
+    // Earnings
+    basic,
+    hra,
+    fuelAllowance,
+    bonus,
+
+    // Deductions
+    pfAmount,
+    professionalTax,
+    absentDeduction,
+
+    // Totals (🔥 THIS FIXES YOUR ERROR)
+    totalEarning,
+    totalDeduction,
+
+    // Attendance
     daysInMonth: Number(slip.daysInMonth ?? 30),
     lopDays: Number(slip.lopDays ?? 0),
-    daysPresent: Number(slip.daysPresent ?? slip.daysInMonth - slip.lopDays),
-    totalEarning:
-      Number(slip.basic ?? 0) +
-      Number(slip.hra ?? 0) +
-      Number(slip.fuelAllowance ?? 0) +
-      Number(slip.bonus ?? 0),
-    netSalary: Number(slip.netSalary ?? 0),
-    amountInWords: convertToWords(Number(slip.netSalary ?? 0)),
+    daysPresent: Number(
+      slip.daysPresent ?? (slip.daysInMonth ?? 30) - (slip.lopDays ?? 0)
+    ),
+
+    // Net
+    netSalary,
+    amountInWords: convertToWords(netSalary),
   };
 }
 
@@ -75,16 +99,32 @@ function buildPayslipHTML(slip: any) {
     box-sizing: border-box;
   }
 
-  .header-title {
+  /* ---------- HEADER ---------- */
+
+  .header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .logo {
+    width: 150px;
+    height: auto;
+    margin-right: 12px;
+  }
+
+  .company-details {
+    flex: 1;
     text-align: center;
+  }
+
+  .header-title {
     font-size: 16px;
     font-weight: bold;
   }
 
   .sub-header {
-    text-align: center;
     font-size: 12px;
-    margin-bottom: 12px;
     margin-top: 4px;
   }
 
@@ -97,10 +137,11 @@ function buildPayslipHTML(slip: any) {
     margin: 14px 0;
   }
 
+  /* ---------- TABLE STYLES ---------- */
+
   table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 6px;
     font-size: 11px;
   }
 
@@ -117,8 +158,27 @@ function buildPayslipHTML(slip: any) {
   .right { text-align: right; }
   .center { text-align: center; }
 
+  /* ---------- EARNINGS / DEDUCTIONS ---------- */
+
+  .salary-split {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .salary-box {
+    width: 50%;
+  }
+
+  .salary-box th {
+    background: #f2f2f2;
+    text-align: left;
+  }
+
+  /* ---------- NET PAY ---------- */
+
   .netpay-title {
-    margin-top: 10px;
+    margin-top: 12px;
     text-align: center;
     font-weight: bold;
     font-size: 13px;
@@ -144,15 +204,21 @@ function buildPayslipHTML(slip: any) {
 
 <div class="payslip-container">
 
-  <div class="header-title">JHEX Consulting LLP</div>
-  <div class="sub-header">
-    FF-Block-A-103, Ganesh Meridian, Opp High Court,<br>
-    SG Highway, Ghatlodiya Ahmedabad – (380061)
+  <!-- HEADER WITH LOGO -->
+  <div class="header">
+    <img src="/image.png" class="logo" alt="Company Logo" />
+    <div class="company-details">
+      <div class="header-title">JHEX Consulting LLP</div>
+      <div class="sub-header">
+        FF-Block-A-103, Ganesh Meridian, Opp High Court,<br>
+        SG Highway, Ghatlodiya Ahmedabad – (380061)
+      </div>
+    </div>
   </div>
 
   <div class="title-box">Pay slip for the month of ${slip.monthName}</div>
 
-  <!-- Employee Info -->
+  <!-- EMPLOYEE INFO -->
   <table class="no-border">
     <tr>
       <td><strong>EMP Code:</strong> ${slip.employeeId}</td>
@@ -177,7 +243,7 @@ function buildPayslipHTML(slip: any) {
     </tr>
   </table>
 
-  <!-- Attendance -->
+  <!-- ATTENDANCE -->
   <table class="no-border">
     <tr>
       <td><strong>Total Days:</strong> ${slip.daysInMonth}</td>
@@ -187,56 +253,72 @@ function buildPayslipHTML(slip: any) {
     </tr>
   </table>
 
-  <!-- Earnings & Deductions -->
-  <table>
+  <!-- EARNINGS & DEDUCTIONS SPLIT -->
+  <div class="salary-split">
+
+    <!-- EARNINGS -->
+    <table>
+  <tr>
+    <th>Earnings</th>
+    <th class="right">Amount</th>
+    <th>Deductions</th>
+    <th class="right">Amount</th>
+  </tr>
+
+  <tr>
+    <td>Basic</td>
+    <td class="right">₹${slip.basic.toLocaleString("en-IN")}</td>
+    <td>PF</td>
+    <td class="right">₹${slip.pfAmount.toLocaleString("en-IN")}</td>
+  </tr>
+
+  <tr>
+    <td>HRA</td>
+    <td class="right">₹${slip.hra.toLocaleString("en-IN")}</td>
+    <td>PT</td>
+    <td class="right">₹${slip.professionalTax.toLocaleString("en-IN")}</td>
+  </tr>
+
+  <tr>
+    <td>Fuel Allowance</td>
+    <td class="right">₹${slip.fuelAllowance.toLocaleString("en-IN")}</td>
+    <td>
+      ${slip.absentDeduction > 0 ? "Absent Deduction" : ""}
+    </td>
+    <td class="right">
+      ${
+        slip.absentDeduction > 0
+          ? `₹${slip.absentDeduction.toLocaleString("en-IN")}`
+          : ""
+      }
+    </td>
+  </tr>
+
+  ${
+    slip.bonus > 0
+      ? `
     <tr>
-      <th>Earning</th>
-      <th class="right">Amount</th>
+      <td>Performance Incentive</td>
+      <td class="right">₹${slip.bonus.toLocaleString("en-IN")}</td>
+      <td></td>
+      <td></td>
     </tr>
+  `
+      : ""
+  }
 
-    <tr><td>Basic</td><td class="right">₹${slip.basic.toLocaleString(
-      "en-IN"
-    )}</td></tr>
-    <tr><td>HRA</td><td class="right">₹${slip.hra.toLocaleString(
-      "en-IN"
-    )}</td></tr>
-    <tr><td>Fuel Allowance</td><td class="right">₹${slip.fuelAllowance.toLocaleString(
-      "en-IN"
-    )}</td></tr>
+  <tr>
+    <th>Total Earnings</th>
+    <th class="right">₹${slip.totalEarning.toLocaleString("en-IN")}</th>
+    <th>Total Deductions</th>
+    <th class="right">₹${slip.totalDeduction.toLocaleString("en-IN")}</th>
+  </tr>
+</table>
 
-    ${
-      slip.bonus > 0
-        ? `
-      <tr>
-        <td>Performance Incentive</td>
-        <td class="right">₹${slip.bonus.toLocaleString("en-IN")}</td>
-      </tr>`
-        : ""
-    }
 
-    <tr><td>PF</td><td class="right">-₹${slip.pfAmount.toLocaleString(
-      "en-IN"
-    )}</td></tr>
-    <tr><td>PT</td><td class="right">-₹${slip.professionalTax.toLocaleString(
-      "en-IN"
-    )}</td></tr>
+  </div>
 
-    ${
-      slip.absentDeduction > 0
-        ? `
-      <tr>
-        <td>Absent Deduction</td>
-        <td class="right">-₹${slip.absentDeduction.toLocaleString("en-IN")}</td>
-      </tr>`
-        : ""
-    }
-
-    <tr>
-      <th>Total Earning</th>
-      <th class="right">₹${slip.totalEarning.toLocaleString("en-IN")}</th>
-    </tr>
-  </table>
-
+  <!-- NET PAY -->
   <div class="netpay-title">Net Pay</div>
   <div class="netpay-amount">₹${slip.netSalary.toLocaleString("en-IN")}</div>
 
@@ -254,7 +336,14 @@ function buildPayslipHTML(slip: any) {
 }
 
 /* Convert number to words (Indian format) */
-function convertToWords(num: number) {
+function convertToWords(num: number): string {
+  if (num === 0) return "ZERO ONLY";
+
+  return convert(num).trim().toUpperCase() + " ONLY";
+}
+
+/* Internal recursive converter — NO 'ONLY' here */
+function convert(num: number): string {
   const a = [
     "",
     "one ",
@@ -281,17 +370,15 @@ function convertToWords(num: number) {
   const b = [
     "",
     "",
-    "twenty",
-    "thirty",
-    "forty",
-    "fifty",
-    "sixty",
-    "seventy",
-    "eighty",
-    "ninety",
+    "twenty ",
+    "thirty ",
+    "forty ",
+    "fifty ",
+    "sixty ",
+    "seventy ",
+    "eighty ",
+    "ninety ",
   ];
-
-  if (num === 0) return "ZERO ONLY";
 
   let words = "";
 
@@ -301,14 +388,18 @@ function convertToWords(num: number) {
   const hundred = Math.floor((num % 1000) / 100);
   const tens = num % 100;
 
-  if (crore > 0) words += convertToWords(crore) + "crore ";
-  if (lakh > 0) words += convertToWords(lakh) + "lakh ";
-  if (thousand > 0) words += convertToWords(thousand) + "thousand ";
-  if (hundred > 0) words += convertToWords(hundred) + "hundred ";
+  if (crore > 0) words += convert(crore) + "crore ";
+  if (lakh > 0) words += convert(lakh) + "lakh ";
+  if (thousand > 0) words += convert(thousand) + "thousand ";
+  if (hundred > 0) words += convert(hundred) + "hundred ";
+
   if (tens > 0) {
-    if (tens < 20) words += a[tens];
-    else words += b[Math.floor(tens / 10)] + "-" + a[tens % 10];
+    if (tens < 20) {
+      words += a[tens];
+    } else {
+      words += b[Math.floor(tens / 10)] + a[tens % 10];
+    }
   }
 
-  return words.trim().toUpperCase() + " ONLY";
+  return words;
 }
