@@ -61,6 +61,13 @@ export default function LeaveHistory() {
     }
   };
 
+  const formatDateRange = (l: any) => {
+    if (l.startDate && l.endDate) {
+      return `${l.startDate} → ${l.endDate}`;
+    }
+    return l.Month || "—";
+  };
+
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -87,10 +94,21 @@ export default function LeaveHistory() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Month</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Days</TableHead>
-                  <TableHead>LOP</TableHead>
+                  <TableHead>Date Range</TableHead>
+                  <TableHead>Total</TableHead>
+
+                  {/* Desktop only */}
+                  <TableHead className="hidden md:table-cell">
+                    Casual
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    Sick
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    LOP
+                  </TableHead>
+
+                  <TableHead>Reason</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -99,7 +117,7 @@ export default function LeaveHistory() {
                 {loading &&
                   Array.from({ length: 6 }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell colSpan={5}>
+                      <TableCell colSpan={7}>
                         <Skeleton className="h-8 w-full" />
                       </TableCell>
                     </TableRow>
@@ -108,7 +126,7 @@ export default function LeaveHistory() {
                 {!loading && leaves.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={7}
                       className="py-8 text-center text-sm text-muted-foreground"
                     >
                       No leave requests found
@@ -117,19 +135,48 @@ export default function LeaveHistory() {
                 )}
 
                 {!loading &&
-                  leaves.map((l) => (
-                    <TableRow key={l.LeaveID}>
-                      <TableCell className="font-medium">
-                        {l.Month}
-                      </TableCell>
-                      <TableCell>{l.leaveType}</TableCell>
-                      <TableCell>{l.requestedDays}</TableCell>
-                      <TableCell>{l.lopDays || "—"}</TableCell>
-                      <TableCell>
-                        {statusBadge(l.status)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  leaves.map((l) => {
+                    const breakup = l.breakup || {};
+
+                    return (
+                      <TableRow key={l.LeaveID}>
+                        {/* Date Range */}
+                        <TableCell className="font-medium whitespace-nowrap">
+                          {formatDateRange(l)}
+                        </TableCell>
+
+                        {/* Total Days */}
+                        <TableCell>
+                          {l.totalDays ??
+                            l.requestedDays ??
+                            "—"}
+                        </TableCell>
+
+                        {/* Desktop only breakup */}
+                        <TableCell className="hidden md:table-cell">
+                          {breakup.CPL ?? "—"}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {breakup.SL ?? "—"}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {breakup.LOP ?? l.lopDays ?? "—"}
+                        </TableCell>
+
+                        {/* Reason */}
+                        <TableCell className="max-w-60">
+                          <p className="line-clamp-2 text-sm text-muted-foreground">
+                            {l.reason || "—"}
+                          </p>
+                        </TableCell>
+
+                        {/* Status */}
+                        <TableCell>
+                          {statusBadge(l.status)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
               </TableBody>
             </Table>
           </div>

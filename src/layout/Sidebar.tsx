@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import {
   LayoutDashboard,
-  Clock,
+  // Clock,
   History,
   Users2,
   User,
@@ -28,7 +28,7 @@ export default function Sidebar({
         { label: "Dashboard", to: "/", icon: LayoutDashboard },
         { label: "Employees", to: "/admin/employees", icon: Users2 },
         { label: "Leave Management", to: "/admin/leave", icon: ClipboardList },
-        { label: "Attendance", to: "/admin/attendance", icon: Users2 },
+        // { label: "Attendance", to: "/admin/attendance", icon: Users2 },
         {
           label: "Generate Salary",
           to: "/admin/salary/generate",
@@ -45,14 +45,14 @@ export default function Sidebar({
       ]
     : [
         { label: "Dashboard", to: "/", icon: LayoutDashboard },
-        { label: "Today", to: "/attendance", icon: Clock },
+        // { label: "Today", to: "/attendance", icon: Clock },
         { label: "Apply Leave", to: "/leave", icon: Calendar },
         { label: "Leave History", to: "/leave/history", icon: History },
-        {
-          label: "Attendance History",
-          to: "/attendance/history",
-          icon: History,
-        },
+        // {
+        //   label: "Attendance History",
+        //   to: "/attendance/history",
+        //   icon: History,
+        // },
         { label: "Salary", to: "/salary/history", icon: IndianRupee },
         { label: "Profile", to: "/profile", icon: User },
       ];

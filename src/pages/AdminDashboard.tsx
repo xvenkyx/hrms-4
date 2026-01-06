@@ -19,6 +19,28 @@ import {
   ClipboardList,
 } from "lucide-react";
 
+/* ===========================
+   HOLIDAYS – 2026
+=========================== */
+const HOLIDAYS_2026 = [
+  { name: "New Year’s Day", date: "Jan 1, 2026", region: "USA" },
+  { name: "Makar Sankranti", date: "Jan 14, 2026", region: "India" },
+  { name: "Memorial Day", date: "May 25, 2026", region: "USA" },
+  { name: "Independence Day", date: "Jul 4, 2026", region: "USA" },
+  { name: "Labor Day", date: "Sep 7, 2026", region: "USA" },
+  {
+    name: "Diwali / Deepavali",
+    date: "Nov 6 – Nov 10, 2026",
+    region: "India",
+  },
+  { name: "Thanksgiving Day", date: "Nov 26, 2026", region: "USA" },
+  {
+    name: "Christmas & Year-End Holidays",
+    date: "Dec 25, 2026 – Jan 1, 2027",
+    region: "USA",
+  },
+];
+
 type Employee = {
   EmployeeID: string;
   name: string;
@@ -56,25 +78,16 @@ export default function AdminDashboard() {
     }
   };
 
-  /* ===========================
-     DERIVED DATA
-  =========================== */
   const totalEmployees = employees.length;
-
   const maleCount = employees.filter(
     (e) => e.gender?.toLowerCase() === "male"
   ).length;
-
   const femaleCount = employees.filter(
     (e) => e.gender?.toLowerCase() === "female"
   ).length;
-
-  const pendingLeaves = leaves.filter(
-    (l) => l.status === "PENDING"
-  );
+  const pendingLeaves = leaves.filter((l) => l.status === "PENDING");
 
   const today = new Date();
-
   const upcomingBirthdays = employees.filter((e) => {
     if (!e.dob) return false;
     const dob = new Date(e.dob);
@@ -97,92 +110,21 @@ export default function AdminDashboard() {
           HR / Admin Dashboard
         </h1>
         <p className="text-sm text-muted-foreground">
-          Overview of people, leaves, and upcoming events
+          Overview of people, leaves, and holidays
         </p>
       </div>
 
       {/* Top stats */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        {/* Employees */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <Users className="h-4 w-4 text-emerald-600" />
-              Total Employees
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-8" />
-            ) : (
-              <p className="text-3xl font-bold">
-                {totalEmployees}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Male */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <UserCheck className="h-4 w-4 text-blue-600" />
-              Male
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-8" />
-            ) : (
-              <p className="text-3xl font-bold">
-                {maleCount}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Female */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <UserX className="h-4 w-4 text-pink-600" />
-              Female
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-8" />
-            ) : (
-              <p className="text-3xl font-bold">
-                {femaleCount}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Pending leaves */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-sm">
-              <ClipboardList className="h-4 w-4 text-yellow-600" />
-              Pending Leaves
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-8" />
-            ) : (
-              <p className="text-3xl font-bold">
-                {pendingLeaves.length}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        <Stat title="Total Employees" value={totalEmployees} loading={loading} icon={<Users className="h-4 w-4 text-emerald-600" />} />
+        <Stat title="Male" value={maleCount} loading={loading} icon={<UserCheck className="h-4 w-4 text-blue-600" />} />
+        <Stat title="Female" value={femaleCount} loading={loading} icon={<UserX className="h-4 w-4 text-pink-600" />} />
+        <Stat title="Pending Leaves" value={pendingLeaves.length} loading={loading} icon={<ClipboardList className="h-4 w-4 text-yellow-600" />} />
       </div>
 
-      {/* Middle row */}
+      {/* Middle */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {/* Upcoming birthdays */}
+        {/* Birthdays */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
@@ -199,82 +141,80 @@ export default function AdminDashboard() {
               </p>
             ) : (
               upcomingBirthdays.map((e) => (
-                <div
-                  key={e.EmployeeID}
-                  className="flex justify-between text-sm"
-                >
+                <div key={e.EmployeeID} className="flex justify-between text-sm">
                   <span>{e.name}</span>
-                  <span className="text-muted-foreground">
-                    {e.dob}
-                  </span>
+                  <span className="text-muted-foreground">{e.dob}</span>
                 </div>
               ))
             )}
           </CardContent>
         </Card>
 
-        {/* Holidays (placeholder) */}
+        {/* Holidays */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
               <Calendar className="h-4 w-4 text-emerald-600" />
-              Upcoming Holidays
+              Holidays – 2026
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span>Republic Day</span>
-              <span className="text-muted-foreground">
-                Jan 26
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Holi</span>
-              <span className="text-muted-foreground">
-                Mar 14
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span>Independence Day</span>
-              <span className="text-muted-foreground">
-                Aug 15
-              </span>
-            </div>
-            <p className="pt-2 text-xs text-muted-foreground">
-              Holiday calendar integration coming soon
-            </p>
+            {HOLIDAYS_2026.map((h) => (
+              <div key={h.name} className="flex justify-between">
+                <span>{h.name}</span>
+                <span className="text-muted-foreground">{h.date}</span>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
 
-      {/* Action reminders */}
+      {/* Actions */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">
-            HR Reminders
-          </CardTitle>
+          <CardTitle className="text-sm">HR Reminders</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 md:flex-row">
-          <Button
-            variant="outline"
-            onClick={() => window.location.href = "/admin/leave"}
-          >
+          <Button variant="outline" onClick={() => window.location.href = "/admin/leave"}>
             Review Leave Requests
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => window.location.href = "/admin/employees"}
-          >
+          <Button variant="outline" onClick={() => window.location.href = "/admin/employees"}>
             Manage Employees
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => window.location.href = "/admin/salary/generate"}
-          >
+          <Button variant="outline" onClick={() => window.location.href = "/admin/salary/generate"}>
             Generate Salary
           </Button>
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+/* ===========================
+   SMALL STAT COMPONENT
+=========================== */
+function Stat({
+  title,
+  value,
+  loading,
+  icon,
+}: {
+  title: string;
+  value: number;
+  loading: boolean;
+  icon: React.ReactNode;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-sm">
+          {icon}
+          {title}
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {loading ? <Skeleton className="h-8" /> : <p className="text-3xl font-bold">{value}</p>}
+      </CardContent>
+    </Card>
   );
 }

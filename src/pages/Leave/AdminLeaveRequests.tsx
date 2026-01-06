@@ -82,6 +82,13 @@ export default function AdminLeaveRequests() {
     }
   };
 
+  const formatDateRange = (l: any) => {
+    if (l.startDate && l.endDate) {
+      return `${l.startDate} → ${l.endDate}`;
+    }
+    return l.Month || "—";
+  };
+
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -108,10 +115,21 @@ export default function AdminLeaveRequests() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Employee</TableHead>
-                  <TableHead>Month</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Days</TableHead>
-                  <TableHead>LOP</TableHead>
+                  <TableHead>Date Range</TableHead>
+                  <TableHead>Total</TableHead>
+
+                  {/* Desktop only */}
+                  <TableHead className="hidden md:table-cell">
+                    CPL
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    SL
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    LOP
+                  </TableHead>
+
+                  <TableHead>Reason</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">
                     Action
@@ -123,7 +141,7 @@ export default function AdminLeaveRequests() {
                 {loading &&
                   Array.from({ length: 6 }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell colSpan={7}>
+                      <TableCell colSpan={9}>
                         <Skeleton className="h-8 w-full" />
                       </TableCell>
                     </TableRow>
@@ -132,7 +150,7 @@ export default function AdminLeaveRequests() {
                 {!loading && leaves.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={9}
                       className="py-8 text-center text-sm text-muted-foreground"
                     >
                       No leave requests found
@@ -141,52 +159,91 @@ export default function AdminLeaveRequests() {
                 )}
 
                 {!loading &&
-                  leaves.map((l) => (
-                    <TableRow key={l.LeaveID}>
-                      <TableCell className="font-mono text-xs">
-                        {l.EmployeeID}
-                      </TableCell>
-                      <TableCell>{l.Month}</TableCell>
-                      <TableCell>{l.leaveType}</TableCell>
-                      <TableCell>{l.requestedDays}</TableCell>
-                      <TableCell>{l.lopDays || "—"}</TableCell>
-                      <TableCell>
-                        {statusBadge(l.status)}
-                      </TableCell>
-                      <TableCell className="text-right space-x-2">
-                        {l.status === "PENDING" ? (
-                          <>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={acting === l.LeaveID}
-                              className="border-emerald-600 text-emerald-700 hover:bg-emerald-50"
-                              onClick={() =>
-                                act(l.LeaveID, "APPROVE")
-                              }
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={acting === l.LeaveID}
-                              className="border-red-600 text-red-700 hover:bg-red-50"
-                              onClick={() =>
-                                act(l.LeaveID, "REJECT")
-                              }
-                            >
-                              Reject
-                            </Button>
-                          </>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">
-                            —
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  leaves.map((l) => {
+                    const breakup = l.breakup || {};
+
+                    return (
+                      <TableRow key={l.LeaveID}>
+                        {/* Employee */}
+                        <TableCell className="font-medium">
+                          {l.EmployeeName ||
+                            l.employeeName ||
+                            l.EmployeeID}
+                        </TableCell>
+
+                        {/* Date Range */}
+                        <TableCell className="whitespace-nowrap">
+                          {formatDateRange(l)}
+                        </TableCell>
+
+                        {/* Total */}
+                        <TableCell>
+                          {l.totalDays ??
+                            l.requestedDays ??
+                            "—"}
+                        </TableCell>
+
+                        {/* Desktop breakup */}
+                        <TableCell className="hidden md:table-cell">
+                          {breakup.CPL ?? "—"}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {breakup.SL ?? "—"}
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {breakup.LOP ??
+                            l.lopDays ??
+                            "—"}
+                        </TableCell>
+
+                        {/* Reason */}
+                        <TableCell className="max-w-[260px]">
+                          <p className="line-clamp-2 text-sm text-muted-foreground">
+                            {l.reason || "—"}
+                          </p>
+                        </TableCell>
+
+                        {/* Status */}
+                        <TableCell>
+                          {statusBadge(l.status)}
+                        </TableCell>
+
+                        {/* Action */}
+                        <TableCell className="text-right space-x-2">
+                          {l.status === "PENDING" ? (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={acting === l.LeaveID}
+                                className="border-emerald-600 text-emerald-700 hover:bg-emerald-50"
+                                onClick={() =>
+                                  act(l.LeaveID, "APPROVE")
+                                }
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={acting === l.LeaveID}
+                                className="border-red-600 text-red-700 hover:bg-red-50"
+                                onClick={() =>
+                                  act(l.LeaveID, "REJECT")
+                                }
+                              >
+                                Reject
+                              </Button>
+                            </>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              —
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
               </TableBody>
             </Table>
           </div>

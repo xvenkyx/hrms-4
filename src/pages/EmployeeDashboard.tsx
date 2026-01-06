@@ -14,16 +14,37 @@ import { Button } from "@/components/ui/button";
 import {
   CalendarCheck,
   Clock,
-  IndianRupee,
   ClipboardList,
+  Calendar,
 } from "lucide-react";
+
+/* ===========================
+   HOLIDAYS – 2026
+=========================== */
+const HOLIDAYS_2026 = [
+  { name: "New Year’s Day", date: "Jan 1, 2026", region: "USA" },
+  { name: "Makar Sankranti", date: "Jan 14, 2026", region: "India" },
+  { name: "Memorial Day", date: "May 25, 2026", region: "USA" },
+  { name: "Independence Day", date: "Jul 4, 2026", region: "USA" },
+  { name: "Labor Day", date: "Sep 7, 2026", region: "USA" },
+  {
+    name: "Diwali / Deepavali",
+    date: "Nov 6 – Nov 10, 2026",
+    region: "India",
+  },
+  { name: "Thanksgiving Day", date: "Nov 26, 2026", region: "USA" },
+  {
+    name: "Christmas & Year-End Holidays",
+    date: "Dec 25, 2026 – Jan 1, 2027",
+    region: "USA",
+  },
+];
 
 export default function EmployeeDashboard() {
   const navigate = useNavigate();
 
   const [attendance, setAttendance] = useState<any>(null);
   const [balance, setBalance] = useState<any>(null);
-  const [latestSalary, setLatestSalary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,10 +53,9 @@ export default function EmployeeDashboard() {
 
   const loadDashboard = async () => {
     try {
-      const [att, bal, sal] = await Promise.allSettled([
+      const [att, bal] = await Promise.allSettled([
         api.get("/attendance/me/today"),
         api.get("/leave/me/balance"),
-        api.get("/salary/me/history"),
       ]);
 
       if (att.status === "fulfilled") {
@@ -44,11 +64,6 @@ export default function EmployeeDashboard() {
 
       if (bal.status === "fulfilled") {
         setBalance(bal.value.data);
-      }
-
-      if (sal.status === "fulfilled") {
-        const slips = sal.value.data || [];
-        setLatestSalary(slips[0] || null);
       }
     } catch (e) {
       console.error("Dashboard load failed", e);
@@ -65,11 +80,11 @@ export default function EmployeeDashboard() {
           Employee Dashboard
         </h1>
         <p className="text-sm text-muted-foreground">
-          Overview of your attendance, leaves, and salary
+          Attendance, leaves, and holiday overview
         </p>
       </div>
 
-      {/* Cards */}
+      {/* Main cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {/* Attendance */}
         <Card>
@@ -105,7 +120,7 @@ export default function EmployeeDashboard() {
           </CardContent>
         </Card>
 
-        {/* Leave balance */}
+        {/* Leave Balance */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
@@ -119,28 +134,16 @@ export default function EmployeeDashboard() {
             ) : balance ? (
               <div className="grid grid-cols-3 gap-2 text-center text-sm">
                 <div>
-                  <div className="text-xs text-muted-foreground">
-                    CPL
-                  </div>
-                  <div className="font-semibold">
-                    {balance.CPL ?? "—"}
-                  </div>
+                  <div className="text-xs text-muted-foreground">CPL</div>
+                  <div className="font-semibold">{balance.CPL ?? "—"}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-muted-foreground">
-                    SL
-                  </div>
-                  <div className="font-semibold">
-                    {balance.SL ?? "—"}
-                  </div>
+                  <div className="text-xs text-muted-foreground">SL</div>
+                  <div className="font-semibold">{balance.SL ?? "—"}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-muted-foreground">
-                    LOP
-                  </div>
-                  <div className="font-semibold">
-                    {balance.LOP ?? "—"}
-                  </div>
+                  <div className="text-xs text-muted-foreground">LOP</div>
+                  <div className="font-semibold">{balance.LOP ?? "—"}</div>
                 </div>
               </div>
             ) : (
@@ -151,74 +154,40 @@ export default function EmployeeDashboard() {
           </CardContent>
         </Card>
 
-        {/* Salary */}
+        {/* Holidays */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-sm">
-              <IndianRupee className="h-4 w-4 text-emerald-600" />
-              Latest Salary
+              <Calendar className="h-4 w-4 text-emerald-600" />
+              Holidays – 2026
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-10" />
-            ) : latestSalary ? (
-              <div className="space-y-1 text-sm">
-                <div>
-                  Month:{" "}
-                  <span className="font-medium">
-                    {latestSalary.Month}
-                  </span>
-                </div>
-                <div>
-                  Net Pay:{" "}
-                  <span className="font-semibold">
-                    ₹
-                    {latestSalary.netSalary?.toLocaleString(
-                      "en-IN"
-                    )}
-                  </span>
-                </div>
+          <CardContent className="space-y-2 text-sm">
+            {HOLIDAYS_2026.map((h) => (
+              <div key={h.name} className="flex justify-between">
+                <span>{h.name}</span>
+                <span className="text-muted-foreground">
+                  {h.date}
+                </span>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No salary generated yet
-              </p>
-            )}
+            ))}
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick actions */}
+      {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm">
-            Quick Actions
-          </CardTitle>
+          <CardTitle className="text-sm">Quick Actions</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3 md:flex-row">
-          <Button
-            variant="outline"
-            onClick={() => navigate("/attendance")}
-          >
+          <Button variant="outline" onClick={() => navigate("/attendance")}>
             <CalendarCheck className="mr-2 h-4 w-4" />
             Mark Attendance
           </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => navigate("/leave")}
-          >
+          <Button variant="outline" onClick={() => navigate("/leave")}>
             <ClipboardList className="mr-2 h-4 w-4" />
             Apply Leave
-          </Button>
-
-          <Button
-            variant="outline"
-            onClick={() => navigate("/salary/history")}
-          >
-            <IndianRupee className="mr-2 h-4 w-4" />
-            View Salary
           </Button>
         </CardContent>
       </Card>
