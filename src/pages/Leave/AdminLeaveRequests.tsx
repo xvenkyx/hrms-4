@@ -62,17 +62,26 @@ export default function AdminLeaveRequests() {
           </span>
         );
       case "REJECTED":
+      case "REJECTED_TL":
         return (
           <span className="rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700">
             Rejected
           </span>
         );
-      default:
+      case "PENDING_HR":
         return (
-          <span className="rounded-md bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
-            Pending
+          <span className="rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700">
+            Pending HR
           </span>
         );
+      case "PENDING_TL":
+        return (
+          <span className="rounded-md bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-700">
+            Pending TL
+          </span>
+        );
+      default:
+        return null;
     }
   };
 
@@ -188,7 +197,7 @@ export default function AdminLeaveRequests() {
 
                         {/* Action */}
                         <TableCell className="text-right space-x-2">
-                          {l.status === "PENDING" ? (
+                          {l.status === "PENDING_HR" ? (
                             <>
                               <Button
                                 size="sm"

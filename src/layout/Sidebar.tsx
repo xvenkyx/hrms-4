@@ -1,8 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+
 import {
   LayoutDashboard,
-  // Clock,
   History,
   Users2,
   User,
@@ -23,45 +25,77 @@ export default function Sidebar({
 
   const isAdmin = roles.includes("v4-admin") || roles.includes("v4-hr");
 
+  /* ===========================
+     DERIVE TEAM LEAD STATUS
+     (FROM TEAM ASSIGNMENTS)
+  =========================== */
+  const [isTeamLead, setIsTeamLead] = useState(false);
+  const [loadingTL, setLoadingTL] = useState(true);
+
+  useEffect(() => {
+    const checkTeamLead = async () => {
+      try {
+        // Backend resolves teamLeadId from token (claims.sub)
+        const res = await api.get("/admin/team-assignments");
+
+        setIsTeamLead(Array.isArray(res.data) && res.data.length > 0);
+      } catch {
+        setIsTeamLead(false);
+      } finally {
+        setLoadingTL(false);
+      }
+    };
+
+    if (!isAdmin) {
+      checkTeamLead();
+    } else {
+      setLoadingTL(false);
+    }
+  }, [isAdmin]);
+
+  /* ===========================
+     NAV CONFIG
+  =========================== */
+  const adminNav = [
+    { label: "Dashboard", to: "/", icon: LayoutDashboard },
+    { label: "Employees", to: "/admin/employees", icon: Users2 },
+    { label: "Leave Management", to: "/admin/leave", icon: ClipboardList },
+    {
+      label: "Team Assignments",
+      to: "/admin/team-assignments",
+      icon: Users2,
+    },
+    { label: "Generate Salary", to: "/admin/salary/generate", icon: IndianRupee },
+    { label: "Performance Bonus", to: "/performance/bonus", icon: IndianRupee },
+    { label: "Salary History", to: "/admin/salary/history", icon: History },
+    { label: "Profile", to: "/profile", icon: User },
+  ];
+
+  const employeeNav = [
+    { label: "Dashboard", to: "/", icon: LayoutDashboard },
+    { label: "Apply Leave", to: "/leave", icon: Calendar },
+    { label: "Leave History", to: "/leave/history", icon: History },
+    { label: "Salary", to: "/salary/history", icon: IndianRupee },
+    { label: "Profile", to: "/profile", icon: User },
+  ];
+
+  const teamLeadNav = [
+    {
+      label: "Team Leave Approvals",
+      to: "/tl/leave",
+      icon: ClipboardList,
+    },
+  ];
+
   const nav = isAdmin
-    ? [
-        { label: "Dashboard", to: "/", icon: LayoutDashboard },
-        { label: "Employees", to: "/admin/employees", icon: Users2 },
-        { label: "Leave Management", to: "/admin/leave", icon: ClipboardList },
-        {
-          label: "Team Assignments",
-          to: "/admin/team-assignments",
-          icon: Users2,
-        },
-        // { label: "Attendance", to: "/admin/attendance", icon: Users2 },
-        {
-          label: "Generate Salary",
-          to: "/admin/salary/generate",
-          icon: IndianRupee,
-        },
-        {
-          label: "Performance Bonus",
-          to: "/performance/bonus",
-          icon: IndianRupee,
-        },
+    ? adminNav
+    : isTeamLead
+    ? [...employeeNav, ...teamLeadNav]
+    : employeeNav;
 
-        { label: "Salary History", to: "/admin/salary/history", icon: History },
-        { label: "Profile", to: "/profile", icon: User },
-      ]
-    : [
-        { label: "Dashboard", to: "/", icon: LayoutDashboard },
-        // { label: "Today", to: "/attendance", icon: Clock },
-        { label: "Apply Leave", to: "/leave", icon: Calendar },
-        { label: "Leave History", to: "/leave/history", icon: History },
-        // {
-        //   label: "Attendance History",
-        //   to: "/attendance/history",
-        //   icon: History,
-        // },
-        { label: "Salary", to: "/salary/history", icon: IndianRupee },
-        { label: "Profile", to: "/profile", icon: User },
-      ];
-
+  /* ===========================
+     RENDER
+  =========================== */
   return (
     <>
       {/* Backdrop (mobile) */}
@@ -89,30 +123,31 @@ export default function Sidebar({
 
         {/* Nav */}
         <nav className="px-3 py-4 space-y-1">
-          {nav.map((item) => {
-            const Icon = item.icon;
-            const active = location.pathname === item.to;
+          {!loadingTL &&
+            nav.map((item) => {
+              const Icon = item.icon;
+              const active = location.pathname === item.to;
 
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                onClick={() => setOpen(false)}
-                className={`
-                  flex items-center gap-3 rounded-md px-3 py-2 text-sm
-                  transition
-                  ${
-                    active
-                      ? "bg-emerald-800 font-semibold"
-                      : "hover:bg-emerald-800/70"
-                  }
-                `}
-              >
-                <Icon size={18} />
-                {item.label}
-              </Link>
-            );
-          })}
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setOpen(false)}
+                  className={`
+                    flex items-center gap-3 rounded-md px-3 py-2 text-sm
+                    transition
+                    ${
+                      active
+                        ? "bg-emerald-800 font-semibold"
+                        : "hover:bg-emerald-800/70"
+                    }
+                  `}
+                >
+                  <Icon size={18} />
+                  {item.label}
+                </Link>
+              );
+            })}
         </nav>
       </aside>
     </>

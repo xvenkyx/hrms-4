@@ -27,6 +27,8 @@ import PerformanceBonus from "./pages/Performance/PerformanceBonus";
 import { RequireRegistration } from "./components/RequireRegistration";
 import AdminTeamAssignments from "./pages/Admin/AdminTeamAssignments";
 import AdminLeaveReview from "./pages/Leave/AdminLeaveReview";
+import TeamLeadLeaveRequests from "./pages/Leave/TeamLeadLeaveRequests";
+import TeamLeadLeaveReview from "./pages/Leave/TeamLeadLeaveReview";
 
 export default function App() {
   const { roles } = useAuth();
@@ -216,6 +218,28 @@ export default function App() {
                 <AdminLeaveReview />
               </MainLayout>
             </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/tl/leave"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <TeamLeadLeaveRequests />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/tl/leave/:leaveId"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <TeamLeadLeaveReview />
+              </MainLayout>
+            </ProtectedRoute>
           }
         />
       </Routes>
