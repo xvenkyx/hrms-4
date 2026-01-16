@@ -11,6 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ArrowLeft, Save } from "lucide-react";
 
 export default function AdminEmployeeEdit() {
@@ -32,6 +39,11 @@ export default function AdminEmployeeEdit() {
     bankName: "",
     bankAccount: "",
     ifsc: "",
+
+    // ✅ NEW
+    employmentStatus: "REGULAR",
+    leaveCPL: 4,
+    leaveSL: 2,
   });
 
   useEffect(() => {
@@ -54,12 +66,18 @@ export default function AdminEmployeeEdit() {
       }
 
       setEmployee(emp);
+
       setForm({
         baseSalary: emp.baseSalary || 0,
         pfApplicable: emp.pfApplicable !== false,
         bankName: emp.bankAccount?.bankName || "",
         bankAccount: emp.bankAccount?.accountNumber || "",
         ifsc: emp.bankAccount?.ifsc || "",
+
+        // ✅ NEW
+        employmentStatus: emp.employmentStatus || "REGULAR",
+        leaveCPL: emp.leaveBalance?.CPL ?? 4,
+        leaveSL: emp.leaveBalance?.SL ?? 2,
       });
     } catch {
       setMessage({
@@ -79,6 +97,14 @@ export default function AdminEmployeeEdit() {
       await api.put(`/admin/employees/${employeeId}`, {
         baseSalary: form.baseSalary,
         pfApplicable: form.pfApplicable,
+
+        // ✅ NEW
+        employmentStatus: form.employmentStatus,
+        leaveBalance:
+          form.employmentStatus === "REGULAR"
+            ? { CPL: form.leaveCPL, SL: form.leaveSL }
+            : { CPL: 0, SL: 0 },
+
         bankAccount: {
           bankName: form.bankName,
           accountNumber: form.bankAccount,
@@ -173,7 +199,67 @@ export default function AdminEmployeeEdit() {
         </CardContent>
       </Card>
 
-      {/* Salary & PF */}
+      {/* ✅ NEW — Employment Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Employment Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Select
+            value={form.employmentStatus}
+            onValueChange={(v) =>
+              setForm({ ...form, employmentStatus: v })
+            }
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PROBATION">Probation</SelectItem>
+              <SelectItem value="REGULAR">Regular</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
+
+      {/* ✅ NEW — Leave Balance */}
+      {form.employmentStatus === "REGULAR" && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Leave Balance
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-4">
+            <Input
+              type="number"
+              placeholder="Casual Leave"
+              value={form.leaveCPL}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  leaveCPL: Number(e.target.value),
+                })
+              }
+            />
+            <Input
+              type="number"
+              placeholder="Sick Leave"
+              value={form.leaveSL}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  leaveSL: Number(e.target.value),
+                })
+              }
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Salary & PF — UNCHANGED */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
@@ -214,7 +300,7 @@ export default function AdminEmployeeEdit() {
         </CardContent>
       </Card>
 
-      {/* Bank details */}
+      {/* Bank details — UNCHANGED */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
@@ -268,7 +354,6 @@ export default function AdminEmployeeEdit() {
         </Button>
       </div>
 
-      {/* Message */}
       {message && (
         <p
           className={`text-sm ${

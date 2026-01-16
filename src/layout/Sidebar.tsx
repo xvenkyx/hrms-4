@@ -28,6 +28,11 @@ export default function Sidebar({
         { label: "Dashboard", to: "/", icon: LayoutDashboard },
         { label: "Employees", to: "/admin/employees", icon: Users2 },
         { label: "Leave Management", to: "/admin/leave", icon: ClipboardList },
+        {
+          label: "Team Assignments",
+          to: "/admin/team-assignments",
+          icon: Users2,
+        },
         // { label: "Attendance", to: "/admin/attendance", icon: Users2 },
         {
           label: "Generate Salary",

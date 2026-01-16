@@ -1,12 +1,8 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -20,9 +16,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ClipboardCheck } from "lucide-react";
 
 export default function AdminLeaveRequests() {
+  const navigate = useNavigate();
   const [leaves, setLeaves] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [acting, setActing] = useState<string | null>(null);
+  // const [acting, setActing] = useState<string | null>(null);
 
   useEffect(() => {
     load();
@@ -41,23 +38,20 @@ export default function AdminLeaveRequests() {
     }
   };
 
-  const act = async (
-    LeaveID: string,
-    action: "APPROVE" | "REJECT"
-  ) => {
-    setActing(LeaveID);
-    try {
-      await api.post("/leave/approve", {
-        LeaveID,
-        action,
-      });
-      await load();
-    } catch (e) {
-      console.error("Leave action failed", e);
-    } finally {
-      setActing(null);
-    }
-  };
+  // const act = async (LeaveID: string, action: "APPROVE" | "REJECT") => {
+  //   setActing(LeaveID);
+  //   try {
+  //     await api.post("/leave/approve", {
+  //       LeaveID,
+  //       action,
+  //     });
+  //     await load();
+  //   } catch (e) {
+  //     console.error("Leave action failed", e);
+  //   } finally {
+  //     setActing(null);
+  //   }
+  // };
 
   const statusBadge = (status: string) => {
     switch (status) {
@@ -119,21 +113,13 @@ export default function AdminLeaveRequests() {
                   <TableHead>Total</TableHead>
 
                   {/* Desktop only */}
-                  <TableHead className="hidden md:table-cell">
-                    CPL
-                  </TableHead>
-                  <TableHead className="hidden md:table-cell">
-                    SL
-                  </TableHead>
-                  <TableHead className="hidden md:table-cell">
-                    LOP
-                  </TableHead>
+                  <TableHead className="hidden md:table-cell">CPL</TableHead>
+                  <TableHead className="hidden md:table-cell">SL</TableHead>
+                  <TableHead className="hidden md:table-cell">LOP</TableHead>
 
                   <TableHead>Reason</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">
-                    Action
-                  </TableHead>
+                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -166,9 +152,7 @@ export default function AdminLeaveRequests() {
                       <TableRow key={l.LeaveID}>
                         {/* Employee */}
                         <TableCell className="font-medium">
-                          {l.EmployeeName ||
-                            l.employeeName ||
-                            l.EmployeeID}
+                          {l.EmployeeName || l.employeeName || l.EmployeeID}
                         </TableCell>
 
                         {/* Date Range */}
@@ -178,9 +162,7 @@ export default function AdminLeaveRequests() {
 
                         {/* Total */}
                         <TableCell>
-                          {l.totalDays ??
-                            l.requestedDays ??
-                            "—"}
+                          {l.totalDays ?? l.requestedDays ?? "—"}
                         </TableCell>
 
                         {/* Desktop breakup */}
@@ -191,9 +173,7 @@ export default function AdminLeaveRequests() {
                           {breakup.SL ?? "—"}
                         </TableCell>
                         <TableCell className="hidden md:table-cell">
-                          {breakup.LOP ??
-                            l.lopDays ??
-                            "—"}
+                          {breakup.LOP ?? l.lopDays ?? "—"}
                         </TableCell>
 
                         {/* Reason */}
@@ -204,9 +184,7 @@ export default function AdminLeaveRequests() {
                         </TableCell>
 
                         {/* Status */}
-                        <TableCell>
-                          {statusBadge(l.status)}
-                        </TableCell>
+                        <TableCell>{statusBadge(l.status)}</TableCell>
 
                         {/* Action */}
                         <TableCell className="text-right space-x-2">
@@ -215,24 +193,11 @@ export default function AdminLeaveRequests() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                disabled={acting === l.LeaveID}
-                                className="border-emerald-600 text-emerald-700 hover:bg-emerald-50"
                                 onClick={() =>
-                                  act(l.LeaveID, "APPROVE")
+                                  navigate(`/admin/leave/${l.LeaveID}`)
                                 }
                               >
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                disabled={acting === l.LeaveID}
-                                className="border-red-600 text-red-700 hover:bg-red-50"
-                                onClick={() =>
-                                  act(l.LeaveID, "REJECT")
-                                }
-                              >
-                                Reject
+                                Review
                               </Button>
                             </>
                           ) : (

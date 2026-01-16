@@ -25,6 +25,8 @@ import LeaveHistory from "./pages/Leave/LeaveHistory";
 import EmployeeLeave from "./pages/Leave/EmployeeLeave";
 import PerformanceBonus from "./pages/Performance/PerformanceBonus";
 import { RequireRegistration } from "./components/RequireRegistration";
+import AdminTeamAssignments from "./pages/Admin/AdminTeamAssignments";
+import AdminLeaveReview from "./pages/Leave/AdminLeaveReview";
 
 export default function App() {
   const { roles } = useAuth();
@@ -64,6 +66,17 @@ export default function App() {
             </AdminRoute>
           }
         />
+        <Route
+          path="/admin/team-assignments"
+          element={
+            <AdminRoute>
+              <MainLayout>
+                <AdminTeamAssignments />
+              </MainLayout>
+            </AdminRoute>
+          }
+        />
+
         <Route
           path="/admin/employees/:employeeId"
           element={
@@ -191,6 +204,16 @@ export default function App() {
             <AdminRoute>
               <MainLayout>
                 <AdminLeaveRequests />
+              </MainLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/leave/:leaveId"
+          element={
+            <AdminRoute>
+              <MainLayout>
+                <AdminLeaveReview />
               </MainLayout>
             </AdminRoute>
           }

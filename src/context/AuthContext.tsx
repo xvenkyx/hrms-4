@@ -1,91 +1,102 @@
 // src/context/AuthContext.tsx
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { api } from "../lib/api";
-import { decodeToken, getToken, saveToken } from "../lib/auth";
-
-interface EmployeeProfile {
-  employeeID?: string;
-  email?: string;
-  registrationComplete?: boolean;
-  [key: string]: any;
-}
+import { api } from "@/lib/api";
+import { decodeToken, getToken, saveToken, logout } from "@/lib/auth";
+import { isTokenExpired, getTokenExpiryTime } from "@/lib/tokenUtils";
 
 interface AuthContextType {
   loading: boolean;
-  employee: EmployeeProfile | null;
-  token: string | null;
+  isAuthenticated: boolean;
   roles: string[];
+  employee: any | null;
 }
 
 const AuthContext = createContext<AuthContextType>({
   loading: true,
-  employee: null,
-  token: null,
+  isAuthenticated: false,
   roles: [],
+  employee: null,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [token, setToken] = useState<string | null>(getToken());
-  const [employee, setEmployee] = useState<EmployeeProfile | null>(null);
-  const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [roles, setRoles] = useState<string[]>([]);
+  const [employee, setEmployee] = useState<any | null>(null);
 
-  // PHASE 1: Read token from Cognito redirect
+  // 🔹 PHASE 1: Read token from Cognito redirect
   useEffect(() => {
     const hash = window.location.hash;
+    if (!hash.includes("id_token")) return;
 
-    if (hash.includes("id_token")) {
-      const params = new URLSearchParams(hash.replace("#", ""));
-      const t = params.get("id_token");
+    const params = new URLSearchParams(hash.replace("#", ""));
+    const token = params.get("id_token");
 
-      if (t) {
-        saveToken(t);
-        setToken(t);
-        window.history.replaceState({}, "", window.location.pathname);
-      }
+    if (token) {
+      saveToken(token);
+      window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
 
-  // PHASE 2: Decode roles
+  // 🔹 PHASE 2: Validate token + roles
   useEffect(() => {
+    const token = getToken();
     if (!token) {
-      setRoles([]);
+      setLoading(false);
       return;
     }
 
-    try {
-      const decoded: any = decodeToken(token);
-      setRoles(decoded["cognito:groups"] || []);
-    } catch (err) {
-      console.error("Token decode failed:", err);
-      setRoles([]);
+    if (isTokenExpired(token)) {
+      alert("Your session expired. Please sign in again.");
+      logout();
+      return;
     }
-  }, [token]);
 
-  // PHASE 3: Fetch profile
+    const decoded: any = decodeToken();
+    setRoles(decoded?.["cognito:groups"] || []);
+    setIsAuthenticated(true);
+  }, []);
+
+  // 🔹 PHASE 3: Pre-expiry warning (10 mins)
   useEffect(() => {
-    const init = async () => {
-      if (!token) {
-        setLoading(false);
-        return;
-      }
+    const token = getToken();
+    if (!token) return;
 
+    const expiry = getTokenExpiryTime(token);
+    if (!expiry) return;
+
+    const TEN_MIN = 10 * 60 * 1000;
+    const timeout = expiry - Date.now() - TEN_MIN;
+
+    if (timeout > 0) {
+      setTimeout(() => {
+        alert("Your session will expire in 10 minutes. Please save your work.");
+      }, timeout);
+    }
+  }, []);
+
+  // 🔹 PHASE 4: Fetch profile
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const loadProfile = async () => {
       try {
         const res = await api.get("/profile/me");
         setEmployee(res.data);
-      } catch (err) {
-        console.error("Profile fetch failed:", err);
+      } catch {
         setEmployee(null);
       } finally {
         setLoading(false);
       }
     };
 
-    init();
-  }, [token]);
+    loadProfile();
+  }, [isAuthenticated]);
 
   return (
-    <AuthContext.Provider value={{ loading, employee, token, roles }}>
+    <AuthContext.Provider
+      value={{ loading, isAuthenticated, roles, employee }}
+    >
       {children}
     </AuthContext.Provider>
   );
