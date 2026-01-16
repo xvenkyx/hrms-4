@@ -80,6 +80,8 @@ export default function AdminTeamAssignments() {
       )
   );
 
+  console.log(assigned)
+
   return (
     <div className="max-w-5xl space-y-6">
       <div>
