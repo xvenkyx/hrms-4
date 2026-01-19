@@ -36,7 +36,7 @@ export default function Sidebar({
     const checkTeamLead = async () => {
       try {
         // Backend resolves teamLeadId from token (claims.sub)
-        const res = await api.get("/admin/team-assignments");
+        const res = await api.get("/tl/my-team");
 
         setIsTeamLead(Array.isArray(res.data) && res.data.length > 0);
       } catch {

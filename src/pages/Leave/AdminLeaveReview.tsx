@@ -11,6 +11,8 @@ export default function AdminLeaveReview() {
 
   const [leave, setLeave] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [cpl, setCpl] = useState(0);
   const [sl, setSl] = useState(0);
@@ -32,59 +34,125 @@ export default function AdminLeaveReview() {
   }, [cpl, sl, leave]);
 
   const approve = async () => {
-    await api.post("/leave/approve", {
-      LeaveID: leave.LeaveID,
-      action: "APPROVE",
-      breakup: { CPL: cpl, SL: sl, LOP: lop },
-    });
-    navigate("/admin/leave");
+    try {
+      setSubmitting(true);
+      await api.post("/leave/approve", {
+        LeaveID: leave.LeaveID,
+        action: "APPROVE",
+        breakup: { CPL: cpl, SL: sl, LOP: lop },
+      });
+
+      setSuccessMessage("Leave approved successfully");
+      setTimeout(() => navigate("/admin/leave"), 1500);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const reject = async () => {
-    await api.post("/leave/approve", {
-      LeaveID: leave.LeaveID,
-      action: "REJECT",
-    });
-    navigate("/admin/leave");
+    try {
+      setSubmitting(true);
+      await api.post("/leave/approve", {
+        LeaveID: leave.LeaveID,
+        action: "REJECT",
+      });
+
+      setSuccessMessage("Leave rejected successfully");
+      setTimeout(() => navigate("/admin/leave"), 1500);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading || !leave) return null;
 
   return (
-    <div className="max-w-xl space-y-6">
-      <h1 className="text-2xl font-semibold">Review Leave</h1>
+    <div className="mx-auto max-w-xl px-4 py-6 space-y-6">
+      <h1 className="text-xl sm:text-2xl font-semibold">Review Leave</h1>
+
+      {successMessage && (
+        <div className="rounded-md bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
+          {successMessage}
+        </div>
+      )}
 
       <Card>
         <CardHeader>
-          <CardTitle>Details</CardTitle>
+          <CardTitle className="text-base">Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2 text-sm">
-          <div>Employee: {leave.employeeName}</div>
           <div>
-            Dates: {leave.startDate} → {leave.endDate}
+            <span className="font-medium">Employee:</span> {leave.employeeName}
           </div>
-          <div>Total Days: {leave.totalDays}</div>
-          <div>Reason: {leave.reason}</div>
+          <div>
+            <span className="font-medium">Dates:</span> {leave.startDate} →{" "}
+            {leave.endDate}
+          </div>
+          <div>
+            <span className="font-medium">Total Days:</span> {leave.totalDays}
+          </div>
+          <div>
+            <span className="font-medium">Reason:</span> {leave.reason}
+          </div>
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle>Allocate Leave</CardTitle>
+          <CardTitle className="text-base">Allocate Leave</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-3 gap-3">
-          <Input type="number" value={cpl} onChange={(e) => setCpl(+e.target.value)} />
-          <Input type="number" value={sl} onChange={(e) => setSl(+e.target.value)} />
-          <Input disabled value={lop} />
+        <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">
+              CPL (Casual Paid Leave)
+            </label>
+            <Input
+              type="number"
+              value={cpl}
+              onChange={(e) => setCpl(+e.target.value)}
+              disabled={submitting}
+              min={0}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">
+              SL (Sick Leave)
+            </label>
+            <Input
+              type="number"
+              value={sl}
+              onChange={(e) => setSl(+e.target.value)}
+              disabled={submitting}
+              min={0}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-muted-foreground">
+              LOP (Loss of Pay)
+            </label>
+            <Input disabled value={lop} />
+          </div>
         </CardContent>
       </Card>
 
-      <div className="flex gap-3">
-        <Button className="bg-emerald-700" onClick={approve}>
-          Approve
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Button
+          className="bg-emerald-700 w-full sm:w-auto"
+          onClick={approve}
+          disabled={submitting}
+        >
+          {submitting ? "Approving..." : "Approve"}
         </Button>
-        <Button variant="outline" onClick={reject}>
-          Reject
+
+        <Button
+          variant="outline"
+          onClick={reject}
+          disabled={submitting}
+          className="w-full sm:w-auto"
+        >
+          {submitting ? "Rejecting..." : "Reject"}
         </Button>
       </div>
     </div>

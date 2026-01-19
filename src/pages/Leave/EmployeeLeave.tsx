@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { api } from "@/lib/api";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,6 +28,23 @@ export default function EmployeeLeave() {
       .finally(() => setLoadingBalance(false));
   }, []);
 
+  /**
+   * Calculate number of leave days whenever dates change
+   * - Includes both start & end date
+   * - Returns 0 if dates are invalid
+   */
+  const numberOfDays = useMemo(() => {
+    if (!startDate || !endDate) return 0;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    if (end < start) return -1;
+
+    const diffTime = end.getTime() - start.getTime();
+    return diffTime / (1000 * 60 * 60 * 24) + 1;
+  }, [startDate, endDate]);
+
   const submit = async () => {
     setSubmitting(true);
     setError(null);
@@ -52,7 +69,11 @@ export default function EmployeeLeave() {
     }
   };
 
-  const isValid = startDate && endDate && reason.trim();
+  const isValid =
+    startDate &&
+    endDate &&
+    reason.trim() &&
+    numberOfDays > 0;
 
   return (
     <div className="max-w-xl space-y-6">
@@ -88,11 +109,41 @@ export default function EmployeeLeave() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-sm font-medium">Start Date</label>
+              <Input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-sm font-medium">End Date</label>
+              <Input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
           </div>
 
+          {/* Days Info */}
+          {numberOfDays > 0 && (
+            <p className="text-sm text-emerald-700">
+              Total Leave Days: <strong>{numberOfDays}</strong>
+            </p>
+          )}
+
+          {numberOfDays === -1 && (
+            <p className="text-sm text-red-600">
+              End date cannot be before start date
+            </p>
+          )}
+
+          {/* Reason */}
           <Textarea
             placeholder="Reason (mandatory)"
             value={reason}
