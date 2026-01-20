@@ -17,9 +17,9 @@ import { ClipboardCheck } from "lucide-react";
 
 export default function AdminLeaveRequests() {
   const navigate = useNavigate();
+
   const [leaves, setLeaves] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  // const [acting, setActing] = useState<string | null>(null);
 
   useEffect(() => {
     load();
@@ -38,21 +38,9 @@ export default function AdminLeaveRequests() {
     }
   };
 
-  // const act = async (LeaveID: string, action: "APPROVE" | "REJECT") => {
-  //   setActing(LeaveID);
-  //   try {
-  //     await api.post("/leave/approve", {
-  //       LeaveID,
-  //       action,
-  //     });
-  //     await load();
-  //   } catch (e) {
-  //     console.error("Leave action failed", e);
-  //   } finally {
-  //     setActing(null);
-  //   }
-  // };
-
+  /* ===========================
+     STATUS BADGE
+  =========================== */
   const statusBadge = (status: string) => {
     switch (status) {
       case "APPROVED":
@@ -85,9 +73,24 @@ export default function AdminLeaveRequests() {
     }
   };
 
+  /* ===========================
+     DATE RANGE
+  =========================== */
+  const formatDate = (d?: string) => {
+    if (!d) return "—";
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return d;
+
+    return date.toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
   const formatDateRange = (l: any) => {
     if (l.startDate && l.endDate) {
-      return `${l.startDate} → ${l.endDate}`;
+      return `${formatDate(l.startDate)} → ${formatDate(l.endDate)}`;
     }
     return l.Month || "—";
   };
@@ -157,11 +160,20 @@ export default function AdminLeaveRequests() {
                   leaves.map((l) => {
                     const breakup = l.breakup || {};
 
+                    const employeeName =
+                      l.EmployeeName || l.employeeName || "—";
+
+                    const employeeCode =
+                      l.employeeCode || l.EmployeeCode || l.EmployeeID;
+
                     return (
                       <TableRow key={l.LeaveID}>
                         {/* Employee */}
-                        <TableCell className="font-medium">
-                          {l.EmployeeName || l.employeeName || l.EmployeeID}
+                        <TableCell>
+                          <div className="font-medium">{employeeName}</div>
+                          <div className="text-xs text-muted-foreground font-mono">
+                            {employeeCode}
+                          </div>
                         </TableCell>
 
                         {/* Date Range */}
@@ -196,19 +208,17 @@ export default function AdminLeaveRequests() {
                         <TableCell>{statusBadge(l.status)}</TableCell>
 
                         {/* Action */}
-                        <TableCell className="text-right space-x-2">
+                        <TableCell className="text-right">
                           {l.status === "PENDING_HR" ? (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() =>
-                                  navigate(`/admin/leave/${l.LeaveID}`)
-                                }
-                              >
-                                Review
-                              </Button>
-                            </>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() =>
+                                navigate(`/admin/leave/${l.LeaveID}`)
+                              }
+                            >
+                              Review
+                            </Button>
                           ) : (
                             <span className="text-xs text-muted-foreground">
                               —

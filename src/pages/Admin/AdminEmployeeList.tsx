@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
+
 import {
   Card,
   CardContent,
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+
 import { Pencil, Search } from "lucide-react";
 
 export default function AdminEmployeeList() {
@@ -69,7 +71,10 @@ export default function AdminEmployeeList() {
         e.Email,
         e.department,
         e.designation,
-        e.EmployeeID,
+
+        // ✅ Search by employee code also
+        e.employeeCode,
+        e.EmployeeID, // fallback
       ]
         .filter(Boolean)
         .join(" ")
@@ -116,7 +121,7 @@ export default function AdminEmployeeList() {
           <div className="relative w-full md:max-w-sm">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search by name, email, dept, designation…"
+              placeholder="Search by name, code, dept, designation…"
               value={search}
               onChange={(e) =>
                 setSearch(e.target.value)
@@ -245,6 +250,10 @@ export default function AdminEmployeeList() {
                       emp.leave ??
                       null;
 
+                    const displayCode =
+                      emp.employeeCode ||
+                      emp.EmployeeID;
+
                     return (
                       <TableRow
                         key={emp.EmployeeID}
@@ -255,7 +264,7 @@ export default function AdminEmployeeList() {
                             {emp.name}
                           </div>
                           <div className="text-xs text-muted-foreground font-mono">
-                            {emp.EmployeeID}
+                            {displayCode}
                           </div>
                         </TableCell>
 

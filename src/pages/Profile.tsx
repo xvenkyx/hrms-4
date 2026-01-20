@@ -56,6 +56,25 @@ export default function Profile() {
     setForm({ ...form, [e.target.name]: e.target.value });
 
   /* ===========================
+     DATE FORMATTER
+  =========================== */
+  const formatDateTime = (value?: string) => {
+    if (!value) return "—";
+
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return value;
+
+    return date.toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  /* ===========================
      SAVE PROFILE
   =========================== */
   const saveProfile = async () => {
@@ -115,6 +134,11 @@ export default function Profile() {
       />
     </div>
   );
+
+  const employeeCode =
+    employee.employeeCode ||
+    employee.employeeID ||
+    employee.EmployeeID;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -237,12 +261,15 @@ export default function Profile() {
               System Info
             </h2>
 
+            {view("Employee Code", employeeCode)}
             {view(
-              "Employee ID",
-              employee.employeeID || employee.EmployeeID
+              "Created At",
+              formatDateTime(employee.createdAt)
             )}
-            {view("Created At", employee.createdAt)}
-            {view("Updated At", employee.updatedAt)}
+            {view(
+              "Updated At",
+              formatDateTime(employee.updatedAt)
+            )}
           </div>
         </CardContent>
       </Card>

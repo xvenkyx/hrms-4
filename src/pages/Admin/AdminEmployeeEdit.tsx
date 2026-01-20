@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
+
 import {
   Card,
   CardContent,
@@ -18,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
 import { ArrowLeft, Save } from "lucide-react";
 
 export default function AdminEmployeeEdit() {
@@ -26,6 +28,7 @@ export default function AdminEmployeeEdit() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -36,14 +39,19 @@ export default function AdminEmployeeEdit() {
   const [form, setForm] = useState({
     baseSalary: 0,
     pfApplicable: true,
+
     bankName: "",
     bankAccount: "",
     ifsc: "",
 
-    // ✅ NEW
     employmentStatus: "REGULAR",
     leaveCPL: 4,
     leaveSL: 2,
+
+    // ✅ NEW
+    employeeCode: "",
+    branch: "",
+    dateOfJoining: "",
   });
 
   useEffect(() => {
@@ -53,6 +61,7 @@ export default function AdminEmployeeEdit() {
   async function loadEmployee() {
     try {
       const res = await api.get("/admin/employees");
+
       const emp = res.data.find(
         (e: any) => e.EmployeeID === employeeId
       );
@@ -70,14 +79,19 @@ export default function AdminEmployeeEdit() {
       setForm({
         baseSalary: emp.baseSalary || 0,
         pfApplicable: emp.pfApplicable !== false,
+
         bankName: emp.bankAccount?.bankName || "",
         bankAccount: emp.bankAccount?.accountNumber || "",
         ifsc: emp.bankAccount?.ifsc || "",
 
-        // ✅ NEW
         employmentStatus: emp.employmentStatus || "REGULAR",
         leaveCPL: emp.leaveBalance?.CPL ?? 4,
         leaveSL: emp.leaveBalance?.SL ?? 2,
+
+        // ✅ NEW
+        employeeCode: emp.employeeCode || "",
+        branch: emp.branch || "",
+        dateOfJoining: emp.dateOfJoining || "",
       });
     } catch {
       setMessage({
@@ -98,12 +112,16 @@ export default function AdminEmployeeEdit() {
         baseSalary: form.baseSalary,
         pfApplicable: form.pfApplicable,
 
-        // ✅ NEW
         employmentStatus: form.employmentStatus,
         leaveBalance:
           form.employmentStatus === "REGULAR"
             ? { CPL: form.leaveCPL, SL: form.leaveSL }
             : { CPL: 0, SL: 0 },
+
+        // ✅ NEW
+        employeeCode: form.employeeCode,
+        branch: form.branch,
+        dateOfJoining: form.dateOfJoining,
 
         bankAccount: {
           bankName: form.bankName,
@@ -157,6 +175,7 @@ export default function AdminEmployeeEdit() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
+
         <h1 className="text-2xl font-semibold tracking-tight">
           Edit Employee
         </h1>
@@ -171,35 +190,77 @@ export default function AdminEmployeeEdit() {
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
           <div>
-            <span className="text-muted-foreground">
-              Employee ID
-            </span>
-            <div className="font-mono">
-              {employee.EmployeeID}
-            </div>
+            <span className="text-muted-foreground">Employee ID</span>
+            <div className="font-mono">{employee.EmployeeID}</div>
           </div>
           <div>
-            <span className="text-muted-foreground">
-              Name
-            </span>
+            <span className="text-muted-foreground">Name</span>
             <div>{employee.name}</div>
           </div>
           <div>
-            <span className="text-muted-foreground">
-              Department
-            </span>
+            <span className="text-muted-foreground">Department</span>
             <div>{employee.department}</div>
           </div>
           <div>
-            <span className="text-muted-foreground">
-              Designation
-            </span>
+            <span className="text-muted-foreground">Designation</span>
             <div>{employee.designation}</div>
           </div>
         </CardContent>
       </Card>
 
-      {/* ✅ NEW — Employment Status */}
+      {/* ✅ Official Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Official Details
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Employee Code</label>
+            <Input
+              value={form.employeeCode}
+              onChange={(e) =>
+                setForm({ ...form, employeeCode: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Branch</label>
+            <Select
+              value={form.branch}
+              onValueChange={(v) =>
+                setForm({ ...form, branch: v })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select branch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Visnagar, Gujarat">Visnagar, Gujarat</SelectItem>
+                <SelectItem value="Ahmedabad, Gujarat">Ahmedabad, Gujarat</SelectItem>
+                <SelectItem value="Pune, Maharashtra">Pune, Maharashtra</SelectItem>
+                <SelectItem value="Mehsana, Gujarat">Mehsana, Gujarat</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Date of Joining</label>
+            <Input
+              type="date"
+              value={form.dateOfJoining}
+              onChange={(e) =>
+                setForm({ ...form, dateOfJoining: e.target.value })
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Employment Status */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
@@ -224,7 +285,7 @@ export default function AdminEmployeeEdit() {
         </CardContent>
       </Card>
 
-      {/* ✅ NEW — Leave Balance */}
+      {/* Leave Balance */}
       {form.employmentStatus === "REGULAR" && (
         <Card>
           <CardHeader>
@@ -235,23 +296,25 @@ export default function AdminEmployeeEdit() {
           <CardContent className="grid grid-cols-2 gap-4">
             <Input
               type="number"
+              min={0}
               placeholder="Casual Leave"
               value={form.leaveCPL}
               onChange={(e) =>
                 setForm({
                   ...form,
-                  leaveCPL: Number(e.target.value),
+                  leaveCPL: Math.max(0, Number(e.target.value)),
                 })
               }
             />
             <Input
               type="number"
+              min={0}
               placeholder="Sick Leave"
               value={form.leaveSL}
               onChange={(e) =>
                 setForm({
                   ...form,
-                  leaveSL: Number(e.target.value),
+                  leaveSL: Math.max(0, Number(e.target.value)),
                 })
               }
             />
@@ -259,7 +322,7 @@ export default function AdminEmployeeEdit() {
         </Card>
       )}
 
-      {/* Salary & PF — UNCHANGED */}
+      {/* Salary & PF */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
@@ -268,16 +331,15 @@ export default function AdminEmployeeEdit() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <label className="text-sm font-medium">
-              Base Salary
-            </label>
+            <label className="text-sm font-medium">Base Salary</label>
             <Input
               type="number"
+              min={0}
               value={form.baseSalary}
               onChange={(e) =>
                 setForm({
                   ...form,
-                  baseSalary: Number(e.target.value),
+                  baseSalary: Math.max(0, Number(e.target.value)),
                 })
               }
             />
@@ -293,14 +355,12 @@ export default function AdminEmployeeEdit() {
                 })
               }
             />
-            <span className="text-sm">
-              PF applicable
-            </span>
+            <span className="text-sm">PF applicable</span>
           </div>
         </CardContent>
       </Card>
 
-      {/* Bank details — UNCHANGED */}
+      {/* Bank Details */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
@@ -319,10 +379,7 @@ export default function AdminEmployeeEdit() {
             placeholder="Account number"
             value={form.bankAccount}
             onChange={(e) =>
-              setForm({
-                ...form,
-                bankAccount: e.target.value,
-              })
+              setForm({ ...form, bankAccount: e.target.value })
             }
           />
           <Input
@@ -346,10 +403,7 @@ export default function AdminEmployeeEdit() {
           {saving ? "Saving…" : "Save Changes"}
         </Button>
 
-        <Button
-          variant="outline"
-          onClick={() => navigate(-1)}
-        >
+        <Button variant="outline" onClick={() => navigate(-1)}>
           Cancel
         </Button>
       </div>
