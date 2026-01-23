@@ -19,8 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-import { ArrowLeft, Save } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Save, User, Building, Calendar, CreditCard, Banknote, Database } from "lucide-react";
 
 export default function AdminEmployeeEdit() {
   const { employeeId } = useParams();
@@ -48,7 +48,6 @@ export default function AdminEmployeeEdit() {
     leaveCPL: 4,
     leaveSL: 2,
 
-    // ✅ NEW
     employeeCode: "",
     branch: "",
     dateOfJoining: "",
@@ -88,7 +87,6 @@ export default function AdminEmployeeEdit() {
         leaveCPL: emp.leaveBalance?.CPL ?? 4,
         leaveSL: emp.leaveBalance?.SL ?? 2,
 
-        // ✅ NEW
         employeeCode: emp.employeeCode || "",
         branch: emp.branch || "",
         dateOfJoining: emp.dateOfJoining || "",
@@ -118,7 +116,6 @@ export default function AdminEmployeeEdit() {
             ? { CPL: form.leaveCPL, SL: form.leaveSL }
             : { CPL: 0, SL: 0 },
 
-        // ✅ NEW
         employeeCode: form.employeeCode,
         branch: form.branch,
         dateOfJoining: form.dateOfJoining,
@@ -148,277 +145,388 @@ export default function AdminEmployeeEdit() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-40 w-full" />
-        <Skeleton className="h-56 w-full" />
+      <div className="max-w-2xl mx-auto space-y-6 p-4">
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} disabled>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          <Skeleton className="h-8 w-48" />
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-56 w-full" />
+          <Skeleton className="h-56 w-full" />
+        </div>
       </div>
     );
   }
 
   if (!employee) {
     return (
-      <p className="text-sm text-destructive">
-        {message?.text}
-      </p>
+      <div className="max-w-2xl mx-auto p-4">
+        <div className="flex items-center gap-3 mb-6">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+        </div>
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="text-destructive text-lg font-medium">{message?.text}</p>
+            <Button className="mt-4" onClick={() => navigate("/admin/employees")}>
+              Return to Employees
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 p-4">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Edit Employee
-        </h1>
-      </div>
-
-      {/* Read-only info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            Employee Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
           <div>
-            <span className="text-muted-foreground">Employee ID</span>
-            <div className="font-mono">{employee.EmployeeID}</div>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Edit Employee Details
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Update official information, leave balance, and payroll details
+            </p>
           </div>
-          <div>
-            <span className="text-muted-foreground">Name</span>
-            <div>{employee.name}</div>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Department</span>
-            <div>{employee.department}</div>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Designation</span>
-            <div>{employee.designation}</div>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* ✅ Official Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            Official Details
-          </CardTitle>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Employee Code</label>
-            <Input
-              value={form.employeeCode}
-              onChange={(e) =>
-                setForm({ ...form, employeeCode: e.target.value })
-              }
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Branch</label>
-            <Select
-              value={form.branch}
-              onValueChange={(v) =>
-                setForm({ ...form, branch: v })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select branch" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Visnagar, Gujarat">Visnagar, Gujarat</SelectItem>
-                <SelectItem value="Ahmedabad, Gujarat">Ahmedabad, Gujarat</SelectItem>
-                <SelectItem value="Pune, Maharashtra">Pune, Maharashtra</SelectItem>
-                <SelectItem value="Mehsana, Gujarat">Mehsana, Gujarat</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Date of Joining</label>
-            <Input
-              type="date"
-              value={form.dateOfJoining}
-              onChange={(e) =>
-                setForm({ ...form, dateOfJoining: e.target.value })
-              }
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Employment Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            Employment Status
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Select
-            value={form.employmentStatus}
-            onValueChange={(v) =>
-              setForm({ ...form, employmentStatus: v })
+        <div className="flex items-center gap-2">
+          <Badge
+            variant="outline"
+            className={
+              form.employmentStatus === "REGULAR"
+                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                : "bg-yellow-50 text-yellow-700 border-yellow-200"
             }
           >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="PROBATION">Probation</SelectItem>
-              <SelectItem value="REGULAR">Regular</SelectItem>
-            </SelectContent>
-          </Select>
-        </CardContent>
-      </Card>
-
-      {/* Leave Balance */}
-      {form.employmentStatus === "REGULAR" && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              Leave Balance
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-4">
-            <Input
-              type="number"
-              min={0}
-              placeholder="Casual Leave"
-              value={form.leaveCPL}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  leaveCPL: Math.max(0, Number(e.target.value)),
-                })
-              }
-            />
-            <Input
-              type="number"
-              min={0}
-              placeholder="Sick Leave"
-              value={form.leaveSL}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  leaveSL: Math.max(0, Number(e.target.value)),
-                })
-              }
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Salary & PF */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            Salary Settings
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <label className="text-sm font-medium">Base Salary</label>
-            <Input
-              type="number"
-              min={0}
-              value={form.baseSalary}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  baseSalary: Math.max(0, Number(e.target.value)),
-                })
-              }
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Checkbox
-              checked={form.pfApplicable}
-              onCheckedChange={(checked: any) =>
-                setForm({
-                  ...form,
-                  pfApplicable: Boolean(checked),
-                })
-              }
-            />
-            <span className="text-sm">PF applicable</span>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Bank Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">
-            Bank Details
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <Input
-            placeholder="Bank name"
-            value={form.bankName}
-            onChange={(e) =>
-              setForm({ ...form, bankName: e.target.value })
-            }
-          />
-          <Input
-            placeholder="Account number"
-            value={form.bankAccount}
-            onChange={(e) =>
-              setForm({ ...form, bankAccount: e.target.value })
-            }
-          />
-          <Input
-            placeholder="IFSC code"
-            value={form.ifsc}
-            onChange={(e) =>
-              setForm({ ...form, ifsc: e.target.value })
-            }
-          />
-        </CardContent>
-      </Card>
-
-      {/* Actions */}
-      <div className="flex items-center gap-3">
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          className="bg-emerald-700 hover:bg-emerald-800"
-        >
-          <Save className="mr-2 h-4 w-4" />
-          {saving ? "Saving…" : "Save Changes"}
-        </Button>
-
-        <Button variant="outline" onClick={() => navigate(-1)}>
-          Cancel
-        </Button>
+            {form.employmentStatus === "REGULAR" ? "Regular Employee" : "Probation"}
+          </Badge>
+        </div>
       </div>
 
       {message && (
-        <p
-          className={`text-sm ${
-            message.type === "success"
-              ? "text-emerald-700"
-              : "text-destructive"
-          }`}
-        >
+        <div className={`rounded-lg p-4 ${message.type === "success" ? "bg-emerald-50 border border-emerald-200 text-emerald-700" : "bg-red-50 border border-red-200 text-red-700"}`}>
           {message.text}
-        </p>
+        </div>
       )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Basic Info */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Personal Information Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <User className="h-4 w-4" />
+                Personal Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium mb-1">Name</div>
+                  <div className="text-lg font-medium">{employee.name}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium mb-1">Designation</div>
+                  <div className="text-lg font-medium">{employee.designation}</div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <div className="text-sm font-medium mb-1">Department</div>
+                  <div className="text-lg font-medium">{employee.department}</div>
+                </div>
+                <div>
+                  <div className="text-sm font-medium mb-1">Employment Status</div>
+                  <Select
+                    value={form.employmentStatus}
+                    onValueChange={(v) =>
+                      setForm({ ...form, employmentStatus: v })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PROBATION">Probation</SelectItem>
+                      <SelectItem value="REGULAR">Regular</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Official Details Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Building className="h-4 w-4" />
+                Official Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium block mb-1">Employee Code</label>
+                  <Input
+                    value={form.employeeCode}
+                    onChange={(e) =>
+                      setForm({ ...form, employeeCode: e.target.value })
+                    }
+                    placeholder="Enter employee code"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Official employee identifier</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">Date of Joining</label>
+                  <Input
+                    type="date"
+                    value={form.dateOfJoining}
+                    onChange={(e) =>
+                      setForm({ ...form, dateOfJoining: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium block mb-1">Branch</label>
+                <Select
+                  value={form.branch}
+                  onValueChange={(v) =>
+                    setForm({ ...form, branch: v })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Visnagar, Gujarat">Visnagar, Gujarat</SelectItem>
+                    <SelectItem value="Ahmedabad, Gujarat">Ahmedabad, Gujarat</SelectItem>
+                    <SelectItem value="Pune, Maharashtra">Pune, Maharashtra</SelectItem>
+                    <SelectItem value="Mehsana, Gujarat">Mehsana, Gujarat</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Salary Details Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Banknote className="h-4 w-4" />
+                Salary & Payroll
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium block mb-1">Base Salary (₹)</label>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.baseSalary}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      baseSalary: Math.max(0, Number(e.target.value)),
+                    })
+                  }
+                  placeholder="Enter base salary"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <Checkbox
+                  checked={form.pfApplicable}
+                  onCheckedChange={(checked: any) =>
+                    setForm({
+                      ...form,
+                      pfApplicable: Boolean(checked),
+                    })
+                  }
+                  id="pf-applicable"
+                />
+                <div>
+                  <label htmlFor="pf-applicable" className="text-sm font-medium">Provident Fund (PF) Applicable</label>
+                  <p className="text-xs text-muted-foreground">Enable PF deductions for this employee</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column - Additional Details */}
+        <div className="space-y-6">
+          {/* Leave Balance Card */}
+          {form.employmentStatus === "REGULAR" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Leave Balance
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium block mb-1">Casual Paid Leave (CPL)</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={form.leaveCPL}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        leaveCPL: Math.max(0, Number(e.target.value)),
+                      })
+                    }
+                    placeholder="CPL balance"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Available casual leave days</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium block mb-1">Sick Leave (SL)</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={form.leaveSL}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        leaveSL: Math.max(0, Number(e.target.value)),
+                      })
+                    }
+                    placeholder="SL balance"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Available sick leave days</p>
+                </div>
+
+                <div className="pt-4 border-t">
+                  <div className="text-sm font-medium mb-2">Current Allocation</div>
+                  <div className="flex justify-between text-sm">
+                    <span>CPL:</span>
+                    <span className="font-medium">{form.leaveCPL} days</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>SL:</span>
+                    <span className="font-medium">{form.leaveSL} days</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Bank Details Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Bank Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-sm font-medium block mb-1">Bank Name</label>
+                <Input
+                  placeholder="e.g., HDFC Bank"
+                  value={form.bankName}
+                  onChange={(e) =>
+                    setForm({ ...form, bankName: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium block mb-1">Account Number</label>
+                <Input
+                  placeholder="1234567890"
+                  value={form.bankAccount}
+                  onChange={(e) =>
+                    setForm({ ...form, bankAccount: e.target.value })
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium block mb-1">IFSC Code</label>
+                <Input
+                  placeholder="HDFC0000123"
+                  value={form.ifsc}
+                  onChange={(e) =>
+                    setForm({ ...form, ifsc: e.target.value })
+                  }
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* System Information Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Database className="h-4 w-4" />
+                System Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div>
+                <div className="text-xs font-medium text-muted-foreground mb-1">Database ID</div>
+                <div className="font-mono text-sm bg-gray-100 p-2 rounded truncate">
+                  {employee.EmployeeID}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Cognito UUID - For system reference only</p>
+              </div>
+
+              <div className="pt-3 border-t">
+                <div className="text-xs font-medium text-muted-foreground mb-1">Last Updated</div>
+                <div className="text-sm">Just now</div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons */}
+          <div className="space-y-3">
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full bg-emerald-700 hover:bg-emerald-800"
+              size="lg"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {saving ? "Saving Changes..." : "Save Changes"}
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => navigate(-1)}
+              className="w-full"
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

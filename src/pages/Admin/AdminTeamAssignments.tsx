@@ -1,19 +1,14 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-// import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -26,21 +21,46 @@ import {
 
 export default function AdminTeamAssignments() {
   const [employees, setEmployees] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const [teamLeadId, setTeamLeadId] = useState<string>("");
   const [assigned, setAssigned] = useState<any[]>([]);
-  const [, setSaving] = useState(false);
+  const [allAssignedIds, setAllAssignedIds] = useState<Set<string>>(new Set());
 
+  const [teamLeadId, setTeamLeadId] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [search, setSearch] = useState("");
+  const [selectedEmployees, setSelectedEmployees] = useState<any[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  /* ----------------------------
+     INITIAL LOAD
+  ----------------------------- */
   useEffect(() => {
-    loadEmployees();
+    loadInitialData();
   }, []);
 
-  async function loadEmployees() {
+  async function loadInitialData() {
     try {
       setLoading(true);
-      const res = await api.get("/admin/employees");
-      setEmployees(res.data || []);
+
+      const empRes = await api.get("/admin/employees");
+      const emps = empRes.data || [];
+      setEmployees(emps);
+
+      // 🔑 Collect all active assignments once
+      const assignedIds = new Set<string>();
+
+      for (const emp of emps) {
+        const res = await api.get(
+          `/admin/team-assignments?teamLeadId=${emp.EmployeeID}`
+        );
+        (res.data || []).forEach((a: any) =>
+          assignedIds.add(a.EmployeeID)
+        );
+      }
+
+      setAllAssignedIds(assignedIds);
     } finally {
       setLoading(false);
     }
@@ -53,14 +73,55 @@ export default function AdminTeamAssignments() {
     setAssigned(res.data || []);
   }
 
-  async function assignEmployee(employeeId: string) {
-    setSaving(true);
+  /* ----------------------------
+     REMOVE FROM TEAM
+  ----------------------------- */
+  async function removeAssignedEmployee(employeeId: string) {
+    await api.delete("/admin/team-assignments", {
+      data: { employeeId, teamLeadId },
+    });
+
+    await loadAssignments(teamLeadId);
+    await loadInitialData();
+  }
+
+  /* ----------------------------
+     SEARCH + SELECT
+  ----------------------------- */
+  function addEmployee(emp: any) {
+    setSelectedEmployees((prev) => [...prev, emp]);
+    setSearch("");
+  }
+
+  function removeSelected(empId: string) {
+    setSelectedEmployees((prev) =>
+      prev.filter((e) => e.EmployeeID !== empId)
+    );
+  }
+
+  /* ----------------------------
+     SUBMIT ASSIGNMENTS
+  ----------------------------- */
+  async function submitAssignments() {
     try {
-      await api.post("/admin/team-assignments", {
-        employeeId,
-        teamLeadId,
-      });
+      setSaving(true);
+      setError(null);
+
+      for (const emp of selectedEmployees) {
+        await api.post("/admin/team-assignments", {
+          employeeId: emp.EmployeeID,
+          teamLeadId,
+        });
+      }
+
+      setSelectedEmployees([]);
       await loadAssignments(teamLeadId);
+      await loadInitialData();
+    } catch (e: any) {
+      setError(
+        e.response?.data?.error ||
+          "Failed to assign employees"
+      );
     } finally {
       setSaving(false);
     }
@@ -70,30 +131,38 @@ export default function AdminTeamAssignments() {
     return <Skeleton className="h-64 w-full" />;
   }
 
-  const teamLeads = employees;
+  /* ----------------------------
+     TEAM LEAD ELIGIBILITY RULE
+  ----------------------------- */
+  const eligibleTeamLeads = employees.filter(
+    (e) => !allAssignedIds.has(e.EmployeeID)
+  );
 
+  /* ----------------------------
+     AVAILABLE EMPLOYEES
+  ----------------------------- */
   const availableEmployees = employees.filter(
     (e) =>
       e.EmployeeID !== teamLeadId &&
-      !assigned.some(
-        (a) => a.EmployeeID === e.EmployeeID
-      )
+      !assigned.some((a) => a.EmployeeID === e.EmployeeID) &&
+      !selectedEmployees.some(
+        (s) => s.EmployeeID === e.EmployeeID
+      ) &&
+      (e.name
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+        e.department
+          ?.toLowerCase()
+          .includes(search.toLowerCase()))
   );
-
-  console.log(assigned)
 
   return (
     <div className="max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Team Assignments
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Define reporting structure for approvals
-        </p>
-      </div>
+      <h1 className="text-2xl font-semibold tracking-tight">
+        Team Assignments
+      </h1>
 
-      {/* Select Team Lead */}
+      {/* TEAM LEAD */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
@@ -101,31 +170,28 @@ export default function AdminTeamAssignments() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Select
+          <select
+            className="w-full max-w-sm rounded-md border px-3 py-2"
             value={teamLeadId}
-            onValueChange={(v) => {
-              setTeamLeadId(v);
-              loadAssignments(v);
+            onChange={(e) => {
+              setTeamLeadId(e.target.value);
+              setSelectedEmployees([]);
+              loadAssignments(e.target.value);
             }}
           >
-            <SelectTrigger className="max-w-sm">
-              <SelectValue placeholder="Choose team lead" />
-            </SelectTrigger>
-            <SelectContent>
-              {teamLeads.map((e) => (
-                <SelectItem
-                  key={e.EmployeeID}
-                  value={e.EmployeeID}
-                >
-                  {e.name} — {e.department}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            <option value="">Choose team lead</option>
+            {eligibleTeamLeads.map((e) => (
+              <option
+                key={e.EmployeeID}
+                value={e.EmployeeID}
+              >
+                {e.name} — {e.department}
+              </option>
+            ))}
+          </select>
         </CardContent>
       </Card>
 
-      {/* Assigned Employees */}
       {teamLeadId && (
         <Card>
           <CardHeader>
@@ -133,58 +199,93 @@ export default function AdminTeamAssignments() {
               Employees under Team Lead
             </CardTitle>
           </CardHeader>
+
           <CardContent className="space-y-4">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Employee</TableHead>
                   <TableHead>Department</TableHead>
-                  <TableHead />
+                  <TableHead className="w-8" />
                 </TableRow>
               </TableHeader>
-
               <TableBody>
-                {assigned.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={3}
-                      className="text-center text-sm text-muted-foreground"
-                    >
-                      No employees assigned
-                    </TableCell>
-                  </TableRow>
-                )}
-
                 {assigned.map((e) => (
                   <TableRow key={e.EmployeeID}>
                     <TableCell>{e.name}</TableCell>
                     <TableCell>{e.department}</TableCell>
-                    <TableCell />
+                    <TableCell>
+                      <button
+                        onClick={() =>
+                          removeAssignedEmployee(e.EmployeeID)
+                        }
+                        className="text-muted-foreground hover:text-red-500"
+                        title="Remove from team"
+                      >
+                        ✕
+                      </button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
 
-            {/* Add Employee */}
-            <Select
-              onValueChange={(v) =>
-                assignEmployee(v)
-              }
-            >
-              <SelectTrigger className="max-w-sm">
-                <SelectValue placeholder="Add employee to this team" />
-              </SelectTrigger>
-              <SelectContent>
+            <label className="text-sm font-medium">
+              Search employees to add
+            </label>
+
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Type name or department"
+              className="max-w-sm"
+            />
+
+            {search && (
+              <div className="rounded-md border">
                 {availableEmployees.map((e) => (
-                  <SelectItem
+                  <div
                     key={e.EmployeeID}
-                    value={e.EmployeeID}
+                    onClick={() => addEmployee(e)}
+                    className="cursor-pointer px-3 py-2 hover:bg-muted"
                   >
                     {e.name} — {e.department}
-                  </SelectItem>
+                  </div>
                 ))}
-              </SelectContent>
-            </Select>
+              </div>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              {selectedEmployees.map((e) => (
+                <div
+                  key={e.EmployeeID}
+                  className="flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm"
+                >
+                  {e.name}
+                  <button
+                    onClick={() =>
+                      removeSelected(e.EmployeeID)
+                    }
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {error && (
+              <p className="text-sm text-red-500">
+                {error}
+              </p>
+            )}
+
+            <Button
+              disabled={!selectedEmployees.length || saving}
+              onClick={submitAssignments}
+            >
+              Assign {selectedEmployees.length} Employees
+            </Button>
           </CardContent>
         </Card>
       )}

@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { decodeToken, getToken, saveToken, logout } from "@/lib/auth";
 import { isTokenExpired, getTokenExpiryTime } from "@/lib/tokenUtils";
+import { useLocation } from "react-router-dom";
 
 interface AuthContextType {
   loading: boolean;
@@ -23,6 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
   const [employee, setEmployee] = useState<any | null>(null);
+  const location = useLocation();
 
   // 🔹 PHASE 1: Read token from Cognito redirect
   useEffect(() => {
@@ -82,21 +84,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const loadProfile = async () => {
       try {
         const res = await api.get("/profile/me");
+
+        if (
+          res.data?.registrationComplete === false &&
+          location.pathname !== "/register"
+        ) {
+          window.location.href = "/register";
+          return;
+        }
+
         setEmployee(res.data);
       } catch {
-        setEmployee(null);
+        if (location.pathname !== "/register") {
+          window.location.href = "/register";
+        }
       } finally {
         setLoading(false);
       }
     };
 
     loadProfile();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, location.pathname]);
 
   return (
-    <AuthContext.Provider
-      value={{ loading, isAuthenticated, roles, employee }}
-    >
+    <AuthContext.Provider value={{ loading, isAuthenticated, roles, employee }}>
       {children}
     </AuthContext.Provider>
   );

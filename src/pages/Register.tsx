@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { api } from "@/lib/api";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -30,7 +25,6 @@ const DEPARTMENTS = [
 const GENDERS = ["Male", "Female", "Other"] as const;
 
 export default function Register() {
-
   const [form, setForm] = useState({
     name: "",
     mobile: "+91",
@@ -64,8 +58,7 @@ export default function Register() {
 
     if (!form.gender) return "Please select gender";
 
-    if (!form.department)
-      return "Please select department";
+    if (!form.department) return "Please select department";
 
     if (!/^\d{11}$/.test(form.bankAcc))
       return "Bank account number must be 11 digits";
@@ -73,8 +66,7 @@ export default function Register() {
     if (!/^[A-Z0-9]{10}$/i.test(form.pan))
       return "PAN must be exactly 10 characters";
 
-    if (!/^\d{12}$/.test(form.uan))
-      return "UAN must be 12 digits";
+    if (!/^\d{12}$/.test(form.uan)) return "UAN must be 12 digits";
 
     return null;
   };
@@ -101,12 +93,11 @@ export default function Register() {
         },
       });
 
+      await api.get("/profile/me");
+
       window.location.href = "/";
     } catch (e: any) {
-      setError(
-        e?.response?.data?.error ||
-          "Registration failed"
-      );
+      setError(e?.response?.data?.error || "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -116,9 +107,7 @@ export default function Register() {
     <div className="max-w-xl mx-auto mt-10">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">
-            Complete Registration
-          </CardTitle>
+          <CardTitle className="text-2xl">Complete Registration</CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -127,9 +116,7 @@ export default function Register() {
             <Label>Name</Label>
             <Input
               value={form.name}
-              onChange={(e) =>
-                update("name", e.target.value)
-              }
+              onChange={(e) => update("name", e.target.value)}
             />
           </div>
 
@@ -138,9 +125,7 @@ export default function Register() {
             <Label>Mobile Number</Label>
             <Input
               value={form.mobile}
-              onChange={(e) =>
-                update("mobile", e.target.value)
-              }
+              onChange={(e) => update("mobile", e.target.value)}
               placeholder="+91XXXXXXXXXX"
             />
           </div>
@@ -151,9 +136,7 @@ export default function Register() {
             <Input
               type="date"
               value={form.dob}
-              onChange={(e) =>
-                update("dob", e.target.value)
-              }
+              onChange={(e) => update("dob", e.target.value)}
             />
           </div>
 
@@ -162,9 +145,7 @@ export default function Register() {
             <Label>Gender</Label>
             <Select
               value={form.gender}
-              onValueChange={(v) =>
-                update("gender", v)
-              }
+              onValueChange={(v) => update("gender", v)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select gender" />
@@ -184,9 +165,7 @@ export default function Register() {
             <Label>Address</Label>
             <Input
               value={form.address}
-              onChange={(e) =>
-                update("address", e.target.value)
-              }
+              onChange={(e) => update("address", e.target.value)}
             />
           </div>
 
@@ -195,9 +174,7 @@ export default function Register() {
             <Label>Bank Account Number</Label>
             <Input
               value={form.bankAcc}
-              onChange={(e) =>
-                update("bankAcc", e.target.value)
-              }
+              onChange={(e) => update("bankAcc", e.target.value)}
             />
           </div>
 
@@ -205,9 +182,7 @@ export default function Register() {
             <Label>IFSC Code</Label>
             <Input
               value={form.ifsc}
-              onChange={(e) =>
-                update("ifsc", e.target.value)
-              }
+              onChange={(e) => update("ifsc", e.target.value)}
             />
           </div>
 
@@ -216,9 +191,7 @@ export default function Register() {
             <Label>PAN</Label>
             <Input
               value={form.pan}
-              onChange={(e) =>
-                update("pan", e.target.value.toUpperCase())
-              }
+              onChange={(e) => update("pan", e.target.value.toUpperCase())}
             />
           </div>
 
@@ -226,9 +199,7 @@ export default function Register() {
             <Label>UAN</Label>
             <Input
               value={form.uan}
-              onChange={(e) =>
-                update("uan", e.target.value)
-              }
+              onChange={(e) => update("uan", e.target.value)}
             />
           </div>
 
@@ -237,9 +208,7 @@ export default function Register() {
             <Label>Department</Label>
             <Select
               value={form.department}
-              onValueChange={(v) =>
-                update("department", v)
-              }
+              onValueChange={(v) => update("department", v)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select department" />
@@ -259,21 +228,12 @@ export default function Register() {
             <Label>Designation</Label>
             <Input
               value={form.designation}
-              onChange={(e) =>
-                update(
-                  "designation",
-                  e.target.value
-                )
-              }
+              onChange={(e) => update("designation", e.target.value)}
             />
           </div>
 
           {/* ERROR */}
-          {error && (
-            <p className="text-sm text-destructive">
-              {error}
-            </p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           {/* ACTION */}
           <Button
@@ -281,9 +241,7 @@ export default function Register() {
             disabled={loading}
             className="w-full bg-emerald-700 hover:bg-emerald-800"
           >
-            {loading
-              ? "Submitting…"
-              : "Complete Registration"}
+            {loading ? "Submitting…" : "Complete Registration"}
           </Button>
         </CardContent>
       </Card>

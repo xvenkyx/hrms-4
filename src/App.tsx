@@ -34,7 +34,6 @@ export default function App() {
   const { roles } = useAuth();
 
   return (
-    <BrowserRouter>
       <Routes>
         {/* Public */}
         <Route path="/login" element={<Login />} />
@@ -243,6 +242,5 @@ export default function App() {
           }
         />
       </Routes>
-    </BrowserRouter>
   );
 }
