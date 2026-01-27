@@ -2,12 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,7 +15,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, User, Building, Calendar, CreditCard, Banknote, Database } from "lucide-react";
+import {
+  ArrowLeft,
+  Save,
+  User,
+  Building,
+  Calendar,
+  CreditCard,
+  Banknote,
+  Database,
+} from "lucide-react";
 
 export default function AdminEmployeeEdit() {
   const { employeeId } = useParams();
@@ -51,6 +55,7 @@ export default function AdminEmployeeEdit() {
     employeeCode: "",
     branch: "",
     dateOfJoining: "",
+    isTL: false,
   });
 
   useEffect(() => {
@@ -61,9 +66,7 @@ export default function AdminEmployeeEdit() {
     try {
       const res = await api.get("/admin/employees");
 
-      const emp = res.data.find(
-        (e: any) => e.EmployeeID === employeeId
-      );
+      const emp = res.data.find((e: any) => e.EmployeeID === employeeId);
 
       if (!emp) {
         setMessage({
@@ -90,6 +93,7 @@ export default function AdminEmployeeEdit() {
         employeeCode: emp.employeeCode || "",
         branch: emp.branch || "",
         dateOfJoining: emp.dateOfJoining || "",
+        isTL: emp.isTL === true,
       });
     } catch {
       setMessage({
@@ -125,6 +129,7 @@ export default function AdminEmployeeEdit() {
           accountNumber: form.bankAccount,
           ifsc: form.ifsc,
         },
+        isTL: form.isTL,
       });
 
       setMessage({
@@ -134,9 +139,7 @@ export default function AdminEmployeeEdit() {
     } catch (err: any) {
       setMessage({
         type: "error",
-        text:
-          err?.response?.data?.error ||
-          "Failed to update employee",
+        text: err?.response?.data?.error || "Failed to update employee",
       });
     } finally {
       setSaving(false);
@@ -147,7 +150,12 @@ export default function AdminEmployeeEdit() {
     return (
       <div className="max-w-2xl mx-auto space-y-6 p-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} disabled>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            disabled
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
@@ -173,8 +181,13 @@ export default function AdminEmployeeEdit() {
         </div>
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-destructive text-lg font-medium">{message?.text}</p>
-            <Button className="mt-4" onClick={() => navigate("/admin/employees")}>
+            <p className="text-destructive text-lg font-medium">
+              {message?.text}
+            </p>
+            <Button
+              className="mt-4"
+              onClick={() => navigate("/admin/employees")}
+            >
               Return to Employees
             </Button>
           </CardContent>
@@ -188,11 +201,7 @@ export default function AdminEmployeeEdit() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate(-1)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
@@ -215,13 +224,17 @@ export default function AdminEmployeeEdit() {
                 : "bg-yellow-50 text-yellow-700 border-yellow-200"
             }
           >
-            {form.employmentStatus === "REGULAR" ? "Regular Employee" : "Probation"}
+            {form.employmentStatus === "REGULAR"
+              ? "Regular Employee"
+              : "Probation"}
           </Badge>
         </div>
       </div>
 
       {message && (
-        <div className={`rounded-lg p-4 ${message.type === "success" ? "bg-emerald-50 border border-emerald-200 text-emerald-700" : "bg-red-50 border border-red-200 text-red-700"}`}>
+        <div
+          className={`rounded-lg p-4 ${message.type === "success" ? "bg-emerald-50 border border-emerald-200 text-emerald-700" : "bg-red-50 border border-red-200 text-red-700"}`}
+        >
           {message.text}
         </div>
       )}
@@ -245,17 +258,23 @@ export default function AdminEmployeeEdit() {
                 </div>
                 <div>
                   <div className="text-sm font-medium mb-1">Designation</div>
-                  <div className="text-lg font-medium">{employee.designation}</div>
+                  <div className="text-lg font-medium">
+                    {employee.designation}
+                  </div>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <div className="text-sm font-medium mb-1">Department</div>
-                  <div className="text-lg font-medium">{employee.department}</div>
+                  <div className="text-lg font-medium">
+                    {employee.department}
+                  </div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium mb-1">Employment Status</div>
+                  <div className="text-sm font-medium mb-1">
+                    Employment Status
+                  </div>
                   <Select
                     value={form.employmentStatus}
                     onValueChange={(v) =>
@@ -286,7 +305,9 @@ export default function AdminEmployeeEdit() {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium block mb-1">Employee Code</label>
+                  <label className="text-sm font-medium block mb-1">
+                    Employee Code
+                  </label>
                   <Input
                     value={form.employeeCode}
                     onChange={(e) =>
@@ -294,11 +315,15 @@ export default function AdminEmployeeEdit() {
                     }
                     placeholder="Enter employee code"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Official employee identifier</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Official employee identifier
+                  </p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium block mb-1">Date of Joining</label>
+                  <label className="text-sm font-medium block mb-1">
+                    Date of Joining
+                  </label>
                   <Input
                     type="date"
                     value={form.dateOfJoining}
@@ -313,20 +338,51 @@ export default function AdminEmployeeEdit() {
                 <label className="text-sm font-medium block mb-1">Branch</label>
                 <Select
                   value={form.branch}
-                  onValueChange={(v) =>
-                    setForm({ ...form, branch: v })
-                  }
+                  onValueChange={(v) => setForm({ ...form, branch: v })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select branch" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Visnagar, Gujarat">Visnagar, Gujarat</SelectItem>
-                    <SelectItem value="Ahmedabad, Gujarat">Ahmedabad, Gujarat</SelectItem>
-                    <SelectItem value="Pune, Maharashtra">Pune, Maharashtra</SelectItem>
-                    <SelectItem value="Mehsana, Gujarat">Mehsana, Gujarat</SelectItem>
+                    <SelectItem value="Visnagar, Gujarat">
+                      Visnagar, Gujarat
+                    </SelectItem>
+                    <SelectItem value="Ahmedabad, Gujarat">
+                      Ahmedabad, Gujarat
+                    </SelectItem>
+                    <SelectItem value="Pune, Maharashtra">
+                      Pune, Maharashtra
+                    </SelectItem>
+                    <SelectItem value="Mehsana, Gujarat">
+                      Mehsana, Gujarat
+                    </SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border">
+                <Checkbox
+                  checked={form.isTL}
+                  onCheckedChange={(checked: any) =>
+                    setForm({ ...form, isTL: Boolean(checked) })
+                  }
+                  id="is-tl"
+                />
+                <div>
+                  <label htmlFor="is-tl" className="text-sm font-medium">
+                    Team Lead
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    Can manage team members and approve leave requests
+                  </p>
+
+                  {/* ⚠️ Warning when removing TL */}
+                  {!form.isTL && employee.isTL === true && (
+                    <p className="text-xs text-red-600 mt-1">
+                      Removing Team Lead access will unassign all team members
+                    </p>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -341,7 +397,9 @@ export default function AdminEmployeeEdit() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium block mb-1">Base Salary (₹)</label>
+                <label className="text-sm font-medium block mb-1">
+                  Base Salary (₹)
+                </label>
                 <Input
                   type="number"
                   min={0}
@@ -368,8 +426,15 @@ export default function AdminEmployeeEdit() {
                   id="pf-applicable"
                 />
                 <div>
-                  <label htmlFor="pf-applicable" className="text-sm font-medium">Provident Fund (PF) Applicable</label>
-                  <p className="text-xs text-muted-foreground">Enable PF deductions for this employee</p>
+                  <label
+                    htmlFor="pf-applicable"
+                    className="text-sm font-medium"
+                  >
+                    Provident Fund (PF) Applicable
+                  </label>
+                  <p className="text-xs text-muted-foreground">
+                    Enable PF deductions for this employee
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -389,7 +454,9 @@ export default function AdminEmployeeEdit() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium block mb-1">Casual Paid Leave (CPL)</label>
+                  <label className="text-sm font-medium block mb-1">
+                    Casual Paid Leave (CPL)
+                  </label>
                   <Input
                     type="number"
                     min={0}
@@ -402,11 +469,15 @@ export default function AdminEmployeeEdit() {
                     }
                     placeholder="CPL balance"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Available casual leave days</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Available casual leave days
+                  </p>
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium block mb-1">Sick Leave (SL)</label>
+                  <label className="text-sm font-medium block mb-1">
+                    Sick Leave (SL)
+                  </label>
                   <Input
                     type="number"
                     min={0}
@@ -419,11 +490,15 @@ export default function AdminEmployeeEdit() {
                     }
                     placeholder="SL balance"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Available sick leave days</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Available sick leave days
+                  </p>
                 </div>
 
                 <div className="pt-4 border-t">
-                  <div className="text-sm font-medium mb-2">Current Allocation</div>
+                  <div className="text-sm font-medium mb-2">
+                    Current Allocation
+                  </div>
                   <div className="flex justify-between text-sm">
                     <span>CPL:</span>
                     <span className="font-medium">{form.leaveCPL} days</span>
@@ -447,7 +522,9 @@ export default function AdminEmployeeEdit() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium block mb-1">Bank Name</label>
+                <label className="text-sm font-medium block mb-1">
+                  Bank Name
+                </label>
                 <Input
                   placeholder="e.g., HDFC Bank"
                   value={form.bankName}
@@ -458,7 +535,9 @@ export default function AdminEmployeeEdit() {
               </div>
 
               <div>
-                <label className="text-sm font-medium block mb-1">Account Number</label>
+                <label className="text-sm font-medium block mb-1">
+                  Account Number
+                </label>
                 <Input
                   placeholder="1234567890"
                   value={form.bankAccount}
@@ -469,13 +548,13 @@ export default function AdminEmployeeEdit() {
               </div>
 
               <div>
-                <label className="text-sm font-medium block mb-1">IFSC Code</label>
+                <label className="text-sm font-medium block mb-1">
+                  IFSC Code
+                </label>
                 <Input
                   placeholder="HDFC0000123"
                   value={form.ifsc}
-                  onChange={(e) =>
-                    setForm({ ...form, ifsc: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, ifsc: e.target.value })}
                 />
               </div>
             </CardContent>
@@ -491,15 +570,21 @@ export default function AdminEmployeeEdit() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <div className="text-xs font-medium text-muted-foreground mb-1">Database ID</div>
+                <div className="text-xs font-medium text-muted-foreground mb-1">
+                  Database ID
+                </div>
                 <div className="font-mono text-sm bg-gray-100 p-2 rounded truncate">
                   {employee.EmployeeID}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">Cognito UUID - For system reference only</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Cognito UUID - For system reference only
+                </p>
               </div>
 
               <div className="pt-3 border-t">
-                <div className="text-xs font-medium text-muted-foreground mb-1">Last Updated</div>
+                <div className="text-xs font-medium text-muted-foreground mb-1">
+                  Last Updated
+                </div>
                 <div className="text-sm">Just now</div>
               </div>
             </CardContent>

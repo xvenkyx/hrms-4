@@ -22,8 +22,6 @@ import {
 export default function AdminTeamAssignments() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [assigned, setAssigned] = useState<any[]>([]);
-  const [allAssignedIds, setAllAssignedIds] = useState<Set<string>>(new Set());
-
   const [teamLeadId, setTeamLeadId] = useState("");
 
   const [loading, setLoading] = useState(true);
@@ -33,61 +31,57 @@ export default function AdminTeamAssignments() {
   const [selectedEmployees, setSelectedEmployees] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  /* ----------------------------
+  /* ==========================
      INITIAL LOAD
-  ----------------------------- */
+  ========================== */
   useEffect(() => {
-    loadInitialData();
+    loadEmployees();
   }, []);
 
-  async function loadInitialData() {
+  async function loadEmployees() {
     try {
       setLoading(true);
-
-      const empRes = await api.get("/admin/employees");
-      const emps = empRes.data || [];
-      setEmployees(emps);
-
-      // 🔑 Collect all active assignments once
-      const assignedIds = new Set<string>();
-
-      for (const emp of emps) {
-        const res = await api.get(
-          `/admin/team-assignments?teamLeadId=${emp.EmployeeID}`
-        );
-        (res.data || []).forEach((a: any) =>
-          assignedIds.add(a.EmployeeID)
-        );
-      }
-
-      setAllAssignedIds(assignedIds);
+      const res = await api.get("/admin/employees");
+      setEmployees(res.data || []);
     } finally {
       setLoading(false);
     }
   }
 
   async function loadAssignments(tlId: string) {
+    if (!tlId) return;
     const res = await api.get(
       `/admin/team-assignments?teamLeadId=${tlId}`
     );
     setAssigned(res.data || []);
   }
 
-  /* ----------------------------
-     REMOVE FROM TEAM
-  ----------------------------- */
-  async function removeAssignedEmployee(employeeId: string) {
-    await api.delete("/admin/team-assignments", {
-      data: { employeeId, teamLeadId },
-    });
+  /* ==========================
+     TEAM LEADS (SOURCE OF TRUTH)
+  ========================== */
+  const teamLeads = employees.filter(
+    (e) => e.isTL === true
+  );
 
-    await loadAssignments(teamLeadId);
-    await loadInitialData();
-  }
+  /* ==========================
+     AVAILABLE EMPLOYEES
+  ========================== */
+  const availableEmployees = employees.filter(
+    (e) =>
+      e.EmployeeID !== teamLeadId &&
+      !assigned.some((a) => a.EmployeeID === e.EmployeeID) &&
+      !selectedEmployees.some(
+        (s) => s.EmployeeID === e.EmployeeID
+      ) &&
+      (
+        e.name?.toLowerCase().includes(search.toLowerCase()) ||
+        e.department?.toLowerCase().includes(search.toLowerCase())
+      )
+  );
 
-  /* ----------------------------
-     SEARCH + SELECT
-  ----------------------------- */
+  /* ==========================
+     SELECTION
+  ========================== */
   function addEmployee(emp: any) {
     setSelectedEmployees((prev) => [...prev, emp]);
     setSearch("");
@@ -99,9 +93,9 @@ export default function AdminTeamAssignments() {
     );
   }
 
-  /* ----------------------------
+  /* ==========================
      SUBMIT ASSIGNMENTS
-  ----------------------------- */
+  ========================== */
   async function submitAssignments() {
     try {
       setSaving(true);
@@ -116,45 +110,25 @@ export default function AdminTeamAssignments() {
 
       setSelectedEmployees([]);
       await loadAssignments(teamLeadId);
-      await loadInitialData();
     } catch (e: any) {
       setError(
-        e.response?.data?.error ||
-          "Failed to assign employees"
+        e.response?.data?.error || "Failed to assign employees"
       );
     } finally {
       setSaving(false);
     }
   }
 
+  async function removeAssignedEmployee(employeeId: string) {
+    await api.delete("/admin/team-assignments", {
+      data: { employeeId, teamLeadId },
+    });
+    await loadAssignments(teamLeadId);
+  }
+
   if (loading) {
     return <Skeleton className="h-64 w-full" />;
   }
-
-  /* ----------------------------
-     TEAM LEAD ELIGIBILITY RULE
-  ----------------------------- */
-  const eligibleTeamLeads = employees.filter(
-    (e) => !allAssignedIds.has(e.EmployeeID)
-  );
-
-  /* ----------------------------
-     AVAILABLE EMPLOYEES
-  ----------------------------- */
-  const availableEmployees = employees.filter(
-    (e) =>
-      e.EmployeeID !== teamLeadId &&
-      !assigned.some((a) => a.EmployeeID === e.EmployeeID) &&
-      !selectedEmployees.some(
-        (s) => s.EmployeeID === e.EmployeeID
-      ) &&
-      (e.name
-        .toLowerCase()
-        .includes(search.toLowerCase()) ||
-        e.department
-          ?.toLowerCase()
-          .includes(search.toLowerCase()))
-  );
 
   return (
     <div className="max-w-5xl space-y-6">
@@ -174,17 +148,15 @@ export default function AdminTeamAssignments() {
             className="w-full max-w-sm rounded-md border px-3 py-2"
             value={teamLeadId}
             onChange={(e) => {
-              setTeamLeadId(e.target.value);
+              const tlId = e.target.value;
+              setTeamLeadId(tlId);
               setSelectedEmployees([]);
-              loadAssignments(e.target.value);
+              loadAssignments(tlId);
             }}
           >
             <option value="">Choose team lead</option>
-            {eligibleTeamLeads.map((e) => (
-              <option
-                key={e.EmployeeID}
-                value={e.EmployeeID}
-              >
+            {teamLeads.map((e) => (
+              <option key={e.EmployeeID} value={e.EmployeeID}>
                 {e.name} — {e.department}
               </option>
             ))}
@@ -220,7 +192,6 @@ export default function AdminTeamAssignments() {
                           removeAssignedEmployee(e.EmployeeID)
                         }
                         className="text-muted-foreground hover:text-red-500"
-                        title="Remove from team"
                       >
                         ✕
                       </button>
@@ -230,14 +201,10 @@ export default function AdminTeamAssignments() {
               </TableBody>
             </Table>
 
-            <label className="text-sm font-medium">
-              Search employees to add
-            </label>
-
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Type name or department"
+              placeholder="Search by name or department"
               className="max-w-sm"
             />
 
@@ -266,7 +233,6 @@ export default function AdminTeamAssignments() {
                     onClick={() =>
                       removeSelected(e.EmployeeID)
                     }
-                    className="text-muted-foreground hover:text-foreground"
                   >
                     ✕
                   </button>

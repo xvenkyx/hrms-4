@@ -26,19 +26,17 @@ export default function Sidebar({
   const isAdmin = roles.includes("v4-admin") || roles.includes("v4-hr");
 
   /* ===========================
-     DERIVE TEAM LEAD STATUS
-     (FROM TEAM ASSIGNMENTS)
-  =========================== */
+   DERIVE TEAM LEAD STATUS
+   (FROM EMPLOYEE PROFILE)
+=========================== */
   const [isTeamLead, setIsTeamLead] = useState(false);
   const [loadingTL, setLoadingTL] = useState(true);
 
   useEffect(() => {
-    const checkTeamLead = async () => {
+    const loadProfile = async () => {
       try {
-        // Backend resolves teamLeadId from token (claims.sub)
-        const res = await api.get("/tl/my-team");
-
-        setIsTeamLead(Array.isArray(res.data) && res.data.length > 0);
+        const res = await api.get("/employee/me");
+        setIsTeamLead(res.data?.isTL === true);
       } catch {
         setIsTeamLead(false);
       } finally {
@@ -47,7 +45,7 @@ export default function Sidebar({
     };
 
     if (!isAdmin) {
-      checkTeamLead();
+      loadProfile();
     } else {
       setLoadingTL(false);
     }
@@ -65,7 +63,11 @@ export default function Sidebar({
       to: "/admin/team-assignments",
       icon: Users2,
     },
-    { label: "Generate Salary", to: "/admin/salary/generate", icon: IndianRupee },
+    {
+      label: "Generate Salary",
+      to: "/admin/salary/generate",
+      icon: IndianRupee,
+    },
     { label: "Performance Bonus", to: "/performance/bonus", icon: IndianRupee },
     { label: "Salary History", to: "/admin/salary/history", icon: History },
     { label: "Profile", to: "/profile", icon: User },
@@ -90,8 +92,8 @@ export default function Sidebar({
   const nav = isAdmin
     ? adminNav
     : isTeamLead
-    ? [...employeeNav, ...teamLeadNav]
-    : employeeNav;
+      ? [...employeeNav, ...teamLeadNav]
+      : employeeNav;
 
   /* ===========================
      RENDER
