@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
 
 const DEPARTMENTS = [
   "HR",
@@ -25,6 +26,7 @@ const DEPARTMENTS = [
 const GENDERS = ["Male", "Female", "Other"] as const;
 
 export default function Register() {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
     mobile: "+91",
@@ -47,7 +49,7 @@ export default function Register() {
     setForm({ ...form, [key]: value });
     // Clear field error when user starts typing
     if (fieldErrors[key]) {
-      setFieldErrors(prev => {
+      setFieldErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[key];
         return newErrors;
@@ -62,15 +64,16 @@ export default function Register() {
     switch (field) {
       case "name":
         if (!value.trim()) return "Name is required";
-        if (value.trim().length < 2) return "Name must be at least 2 characters";
+        if (value.trim().length < 2)
+          return "Name must be at least 2 characters";
         return null;
-      
+
       case "mobile":
         if (!value) return "Mobile number is required";
-        if (!/^\+91\d{10}$/.test(value)) 
+        if (!/^\+91\d{10}$/.test(value))
           return "Mobile must be +91 followed by 10 digits";
         return null;
-      
+
       case "dob":
         if (!value) return "Date of birth is required";
         // Additional date validation
@@ -78,43 +81,45 @@ export default function Register() {
         const today = new Date();
         if (dobDate >= today) return "Date of birth must be in the past";
         return null;
-      
+
       case "gender":
         if (!value) return "Please select gender";
         return null;
-      
+
       case "address":
         if (!value.trim()) return "Address is required";
-        if (value.trim().length < 10) return "Address must be at least 10 characters";
+        if (value.trim().length < 10)
+          return "Address must be at least 10 characters";
         return null;
-      
+
       case "bankAcc":
         if (!value) return "Bank account number is required";
         if (!/^\d{11}$/.test(value)) return "Bank account must be 11 digits";
         return null;
-      
+
       case "ifsc":
         if (!value.trim()) return "IFSC code is required";
         return null;
-      
+
       case "pan":
         if (!value.trim()) return "PAN is required";
         return null;
-      
+
       case "uan":
         if (!value) return "UAN is required";
         if (!/^\d{12}$/.test(value)) return "UAN must be 12 digits";
         return null;
-      
+
       case "department":
         if (!value) return "Please select department";
         return null;
-      
+
       case "designation":
         if (!value.trim()) return "Designation is required";
-        if (value.trim().length < 2) return "Designation must be at least 2 characters";
+        if (value.trim().length < 2)
+          return "Designation must be at least 2 characters";
         return null;
-      
+
       default:
         return null;
     }
@@ -197,7 +202,7 @@ export default function Register() {
 
       await api.get("/profile/me");
 
-      window.location.href = "/";
+      navigate("/");
     } catch (e: any) {
       setError(e?.response?.data?.error || "Registration failed");
     } finally {
@@ -229,7 +234,9 @@ export default function Register() {
               className={fieldErrors.name ? "border-destructive" : ""}
             />
             {fieldErrors.name && (
-              <p className="text-xs text-destructive mt-1">{fieldErrors.name}</p>
+              <p className="text-xs text-destructive mt-1">
+                {fieldErrors.name}
+              </p>
             )}
           </div>
 
@@ -246,7 +253,9 @@ export default function Register() {
               className={fieldErrors.mobile ? "border-destructive" : ""}
             />
             {fieldErrors.mobile && (
-              <p className="text-xs text-destructive mt-1">{fieldErrors.mobile}</p>
+              <p className="text-xs text-destructive mt-1">
+                {fieldErrors.mobile}
+              </p>
             )}
           </div>
 
@@ -277,7 +286,9 @@ export default function Register() {
               value={form.gender}
               onValueChange={(v) => update("gender", v)}
             >
-              <SelectTrigger className={fieldErrors.gender ? "border-destructive" : ""}>
+              <SelectTrigger
+                className={fieldErrors.gender ? "border-destructive" : ""}
+              >
                 <SelectValue placeholder="Select gender" />
               </SelectTrigger>
               <SelectContent>
@@ -289,7 +300,9 @@ export default function Register() {
               </SelectContent>
             </Select>
             {fieldErrors.gender && (
-              <p className="text-xs text-destructive mt-1">{fieldErrors.gender}</p>
+              <p className="text-xs text-destructive mt-1">
+                {fieldErrors.gender}
+              </p>
             )}
           </div>
 
@@ -306,7 +319,9 @@ export default function Register() {
               className={fieldErrors.address ? "border-destructive" : ""}
             />
             {fieldErrors.address && (
-              <p className="text-xs text-destructive mt-1">{fieldErrors.address}</p>
+              <p className="text-xs text-destructive mt-1">
+                {fieldErrors.address}
+              </p>
             )}
           </div>
 
@@ -323,7 +338,9 @@ export default function Register() {
               className={fieldErrors.bankAcc ? "border-destructive" : ""}
             />
             {fieldErrors.bankAcc && (
-              <p className="text-xs text-destructive mt-1">{fieldErrors.bankAcc}</p>
+              <p className="text-xs text-destructive mt-1">
+                {fieldErrors.bankAcc}
+              </p>
             )}
           </div>
 
@@ -340,7 +357,9 @@ export default function Register() {
               className={fieldErrors.ifsc ? "border-destructive" : ""}
             />
             {fieldErrors.ifsc && (
-              <p className="text-xs text-destructive mt-1">{fieldErrors.ifsc}</p>
+              <p className="text-xs text-destructive mt-1">
+                {fieldErrors.ifsc}
+              </p>
             )}
           </div>
 
@@ -388,7 +407,9 @@ export default function Register() {
               value={form.department}
               onValueChange={(v) => update("department", v)}
             >
-              <SelectTrigger className={fieldErrors.department ? "border-destructive" : ""}>
+              <SelectTrigger
+                className={fieldErrors.department ? "border-destructive" : ""}
+              >
                 <SelectValue placeholder="Select department" />
               </SelectTrigger>
               <SelectContent>
@@ -400,7 +421,9 @@ export default function Register() {
               </SelectContent>
             </Select>
             {fieldErrors.department && (
-              <p className="text-xs text-destructive mt-1">{fieldErrors.department}</p>
+              <p className="text-xs text-destructive mt-1">
+                {fieldErrors.department}
+              </p>
             )}
           </div>
 
@@ -417,7 +440,9 @@ export default function Register() {
               className={fieldErrors.designation ? "border-destructive" : ""}
             />
             {fieldErrors.designation && (
-              <p className="text-xs text-destructive mt-1">{fieldErrors.designation}</p>
+              <p className="text-xs text-destructive mt-1">
+                {fieldErrors.designation}
+              </p>
             )}
           </div>
 
