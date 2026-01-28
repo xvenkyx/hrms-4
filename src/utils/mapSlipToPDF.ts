@@ -6,26 +6,22 @@ export function mapSlipToPDF(slip: any) {
 
   // Total approved leave days (CPL + SL + LOP)
   // Backend may or may not send this, so derive safely
-  const approvedLeaveDays =
-    Number(slip.approvedLeaveDays ??
-      slip.totalLeaveDays ??
-      lopDays // fallback: at least LOP
-    );
+  const approvedLeaveDays = Number(
+    slip.approvedLeaveDays ?? slip.totalLeaveDays ?? lopDays, // fallback: at least LOP
+  );
 
   // Presence = total days - all approved leave days
-  const daysPresent = Math.max(
-    daysInMonth - approvedLeaveDays,
-    0
-  );
+  const daysPresent = Math.max(daysInMonth - approvedLeaveDays, 0);
 
   return {
     /* -------- Meta -------- */
     monthName: formatMonth(slip.Month),
 
-    employeeId: slip.EmployeeID,
+    employeeId: slip.employeeCode || slip.EmployeeID,
     employeeName: slip.employeeName,
     department: slip.department,
     designation: slip.designation,
+    joiningDate: slip.joiningDate,
 
     /* -------- Bank -------- */
     bankName: slip.bankAccount?.bankName || "—",
@@ -55,7 +51,7 @@ export function mapSlipToPDF(slip: any) {
     daysInMonth,
     daysPresent,
     lopDays,
-    arrearDays: Number(slip.arrearDays ?? 0)
+    arrearDays: Number(slip.arrearDays ?? 0),
   };
 }
 
@@ -66,6 +62,6 @@ function formatMonth(month: string) {
   const [y, m] = month.split("-");
   return new Date(Number(y), Number(m) - 1).toLocaleString("en-IN", {
     month: "long",
-    year: "numeric"
+    year: "numeric",
   });
 }

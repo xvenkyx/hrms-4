@@ -426,7 +426,7 @@ export default function AdminLeaveRequests() {
                                 className="flex items-center gap-1"
                               >
                                 <Eye className="h-3 w-3" />
-                                View
+                                Edit
                               </Button>
                             )}
                           </div>
