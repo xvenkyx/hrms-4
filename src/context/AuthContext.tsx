@@ -3,7 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { decodeToken, getToken, saveToken, logout } from "@/lib/auth";
 import { isTokenExpired, getTokenExpiryTime } from "@/lib/tokenUtils";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   loading: boolean;
@@ -20,6 +20,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [roles, setRoles] = useState<string[]>([]);
@@ -89,14 +90,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           res.data?.registrationComplete === false &&
           location.pathname !== "/register"
         ) {
-          window.location.href = "/register";
+          navigate("/register", { replace: true });
           return;
         }
 
         setEmployee(res.data);
       } catch {
         if (location.pathname !== "/register") {
-          window.location.href = "/register";
+          navigate("/register", { replace: true });
         }
       } finally {
         setLoading(false);
@@ -104,7 +105,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     loadProfile();
-  }, [isAuthenticated, location.pathname]);
+  }, [isAuthenticated, location.pathname, navigate]);
 
   return (
     <AuthContext.Provider value={{ loading, isAuthenticated, roles, employee }}>
