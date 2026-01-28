@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const DEPARTMENTS = [
   "HR",
@@ -26,6 +27,7 @@ const DEPARTMENTS = [
 const GENDERS = ["Male", "Female", "Other"] as const;
 
 export default function Register() {
+  const { setEmployee } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "",
@@ -200,7 +202,8 @@ export default function Register() {
         },
       });
 
-      await api.get("/profile/me");
+      const res = await api.get("/profile/me");
+      setEmployee(res.data);
 
       navigate("/");
     } catch (e: any) {

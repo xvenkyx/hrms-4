@@ -10,6 +10,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   roles: string[];
   employee: any | null;
+  setEmployee: React.Dispatch<React.SetStateAction<any | null>>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextType>({
   isAuthenticated: false,
   roles: [],
   employee: null,
+  setEmployee: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -108,7 +110,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [isAuthenticated, location.pathname, navigate]);
 
   return (
-    <AuthContext.Provider value={{ loading, isAuthenticated, roles, employee }}>
+    <AuthContext.Provider value={{ loading, isAuthenticated, roles, employee, setEmployee }}>
       {children}
     </AuthContext.Provider>
   );
