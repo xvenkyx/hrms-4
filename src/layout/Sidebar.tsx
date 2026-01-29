@@ -69,6 +69,12 @@ export default function Sidebar({
       icon: IndianRupee,
     },
     { label: "Performance Bonus", to: "/performance/bonus", icon: IndianRupee },
+    // 👇 ADD THIS
+    {
+      label: "Other Deductions",
+      to: "/performance/deductions",
+      icon: IndianRupee,
+    },
     { label: "Salary History", to: "/admin/salary/history", icon: History },
     { label: "Profile", to: "/profile", icon: User },
   ];

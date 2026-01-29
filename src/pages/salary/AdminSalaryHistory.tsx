@@ -1,14 +1,11 @@
-import { useState } from "react";
 import { api } from "@/lib/api";
-import { generateSalaryPDF } from "@/utils/pdf";
-import { mapSlipToPDF } from "@/utils/mapSlipToPDF";
+import { downloadPayslip } from "@/utils/downloadPayslip";
+import { useState } from "react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -17,9 +14,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar, Download } from "lucide-react";
 
 export default function AdminSalaryHistory() {
@@ -94,12 +88,8 @@ export default function AdminSalaryHistory() {
                 <TableRow>
                   <TableHead>Employee</TableHead>
                   <TableHead>Month</TableHead>
-                  <TableHead className="text-right">
-                    Net Salary
-                  </TableHead>
-                  <TableHead className="text-right">
-                    Action
-                  </TableHead>
+                  <TableHead className="text-right">Net Salary</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -134,21 +124,14 @@ export default function AdminSalaryHistory() {
                       </TableCell>
                       <TableCell>{slip.Month}</TableCell>
                       <TableCell className="text-right">
-                        ₹
-                        {slip.netSalary.toLocaleString(
-                          "en-IN"
-                        )}
+                        ₹{slip.netSalary.toLocaleString("en-IN")}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
                           size="sm"
                           variant="outline"
                           className="border-emerald-600 text-emerald-700 hover:bg-emerald-50"
-                          onClick={() =>
-                            generateSalaryPDF(
-                              mapSlipToPDF(slip)
-                            )
-                          }
+                          onClick={() => downloadPayslip(slip)}
                         >
                           <Download className="mr-1 h-4 w-4" />
                           Download

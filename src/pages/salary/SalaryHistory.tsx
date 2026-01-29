@@ -1,13 +1,12 @@
-import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { generateSalaryPDF } from "@/utils/pdf";
-import { mapSlipToPDF } from "@/utils/mapSlipToPDF";
+import { useEffect, useState } from "react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, IndianRupee, Calendar, RefreshCcw } from "lucide-react";
+import { downloadPayslip } from "@/utils/downloadPayslip";
+import { Calendar, Download, IndianRupee, RefreshCcw } from "lucide-react";
 
 export default function SalaryHistory() {
   const [slips, setSlips] = useState<any[]>([]);
@@ -34,7 +33,7 @@ export default function SalaryHistory() {
 
   function handleView() {
     const slip = slips.find((s) => s.Month === month);
-    console.log(slip)
+    console.log(slip);
     setSelectedSlip(slip || null);
   }
 
@@ -134,7 +133,7 @@ export default function SalaryHistory() {
             </div>
 
             <Button
-              onClick={() => generateSalaryPDF(mapSlipToPDF(selectedSlip))}
+              onClick={() => downloadPayslip(selectedSlip)}
               className="bg-emerald-700 hover:bg-emerald-800"
             >
               <Download className="mr-2 h-4 w-4" />

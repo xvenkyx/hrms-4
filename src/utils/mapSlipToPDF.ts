@@ -1,5 +1,5 @@
 export function mapSlipToPDF(slip: any) {
-  const daysInMonth = Number(slip.daysInMonth ?? 30);
+  const daysInMonth = Number(slip.daysInMonth) || getDaysInMonth(slip.Month);
 
   // LOP days affect salary deduction
   const lopDays = Number(slip.lopDays ?? 0);
@@ -44,6 +44,10 @@ export function mapSlipToPDF(slip: any) {
     professionalTax: Number(slip.professionalTax ?? 0),
     absentDeduction: Number(slip.absentDeduction ?? 0),
 
+    // ✅ ADD THESE
+    otherDeductions: slip.otherDeductions ?? [],
+    otherDeductionsTotal: Number(slip.otherDeductionsTotal ?? 0),
+
     totalEarning: Number(slip.totalEarning ?? 0),
     netSalary: Number(slip.netSalary ?? 0),
 
@@ -64,4 +68,13 @@ function formatMonth(month: string) {
     month: "long",
     year: "numeric",
   });
+}
+
+function getDaysInMonth(month: string): number {
+  if (!month) return 30;
+
+  const [year, mon] = month.split("-").map(Number);
+
+  // JS trick: day 0 of next month = last day of current month
+  return new Date(year, mon, 0).getDate();
 }

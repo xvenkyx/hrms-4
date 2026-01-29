@@ -7,7 +7,7 @@ export function generateSalaryPDF(slip: any) {
   const printWindow = window.open(
     "about:blank",
     "_blank",
-    "width=800,height=1000"
+    "width=800,height=1000",
   );
 
   if (!printWindow) {
@@ -41,7 +41,17 @@ function normalizeSlip(slip: any) {
 
   const totalEarning = basic + hra + fuelAllowance + bonus;
 
-  const totalDeduction = pfAmount + professionalTax + absentDeduction;
+  const otherDeductions = Array.isArray(slip.otherDeductions)
+    ? slip.otherDeductions
+    : [];
+
+  const otherDeductionsTotal = otherDeductions.reduce(
+    (sum: number, d: any) => sum + Number(d.amount || 0),
+    0,
+  );
+
+  const totalDeduction =
+    pfAmount + professionalTax + absentDeduction + otherDeductionsTotal;
 
   const netSalary = Number(slip.netSalary ?? 0);
 
@@ -58,8 +68,10 @@ function normalizeSlip(slip: any) {
     pfAmount,
     professionalTax,
     absentDeduction,
+    otherDeductions,
+    otherDeductionsTotal,
 
-    // Totals (🔥 THIS FIXES YOUR ERROR)
+    // Totals
     totalEarning,
     totalDeduction,
 
@@ -67,7 +79,7 @@ function normalizeSlip(slip: any) {
     daysInMonth: Number(slip.daysInMonth ?? 30),
     lopDays: Number(slip.lopDays ?? 0),
     daysPresent: Number(
-      slip.daysPresent ?? (slip.daysInMonth ?? 30) - (slip.lopDays ?? 0)
+      slip.daysPresent ?? (slip.daysInMonth ?? 30) - (slip.lopDays ?? 0),
     ),
 
     // Net
@@ -76,7 +88,53 @@ function normalizeSlip(slip: any) {
   };
 }
 
-function buildPayslipHTML(slip: any) {
+export function buildPayslipHTML(slip: any) {
+  const earningRows = [
+    { label: "Basic", amount: slip.basic },
+    { label: "HRA", amount: slip.hra },
+    { label: "Fuel Allowance", amount: slip.fuelAllowance },
+  ];
+
+  if (slip.bonus > 0) {
+    earningRows.push({
+      label: "Performance Incentive",
+      amount: slip.bonus,
+    });
+  }
+
+  const deductionRows = [
+    { label: "PF", amount: slip.pfAmount },
+    { label: "PT", amount: slip.professionalTax },
+  ];
+
+  if (slip.absentDeduction > 0) {
+    deductionRows.push({
+      label: "Absent Deduction",
+      amount: slip.absentDeduction,
+    });
+  }
+
+  slip.otherDeductions?.forEach((d: any) => {
+    deductionRows.push({
+      label: d.type,
+      amount: d.amount,
+    });
+  });
+
+  const totalEarningCalc = earningRows.reduce(
+    (s, r) => s + Number(r.amount || 0),
+    0,
+  );
+
+  const totalDeductionCalc = deductionRows.reduce(
+    (s, r) => s + Number(r.amount || 0),
+    0,
+  );
+
+  const netPayCalc = totalEarningCalc - totalDeductionCalc;
+
+  // const rowCount = Math.max(earningRows.length, deductionRows.length);
+
   return `
 <!DOCTYPE html>
 <html>
@@ -234,7 +292,7 @@ function buildPayslipHTML(slip: any) {
       <td><strong>Designation:</strong> ${slip.designation}</td>
       <td><strong>Department:</strong> ${slip.department}</td>
       <td><strong>Total Salary:</strong> ₹${slip.baseSalary.toLocaleString(
-        "en-IN"
+        "en-IN",
       )}</td>
     </tr>
     <tr>
@@ -254,75 +312,97 @@ function buildPayslipHTML(slip: any) {
   </table>
 
   <!-- EARNINGS & DEDUCTIONS SPLIT -->
-  <div class="salary-split">
+  <!-- EARNINGS & DEDUCTIONS SPLIT -->
+<div class="salary-split">
 
-    <!-- EARNINGS -->
-    <table>
-  <tr>
-    <th>Earnings</th>
-    <th class="right">Amount</th>
-    <th>Deductions</th>
-    <th class="right">Amount</th>
-  </tr>
-
-  <tr>
-    <td>Basic</td>
-    <td class="right">₹${slip.basic.toLocaleString("en-IN")}</td>
-    <td>PF</td>
-    <td class="right">₹${slip.pfAmount.toLocaleString("en-IN")}</td>
-  </tr>
-
-  <tr>
-    <td>HRA</td>
-    <td class="right">₹${slip.hra.toLocaleString("en-IN")}</td>
-    <td>PT</td>
-    <td class="right">₹${slip.professionalTax.toLocaleString("en-IN")}</td>
-  </tr>
-
-  <tr>
-    <td>Fuel Allowance</td>
-    <td class="right">₹${slip.fuelAllowance.toLocaleString("en-IN")}</td>
-    <td>
-      ${slip.absentDeduction > 0 ? "Absent Deduction" : ""}
-    </td>
-    <td class="right">
-      ${
-        slip.absentDeduction > 0
-          ? `₹${slip.absentDeduction.toLocaleString("en-IN")}`
-          : ""
-      }
-    </td>
-  </tr>
-
-  ${
-    slip.bonus > 0
-      ? `
+  <table>
     <tr>
-      <td>Performance Incentive</td>
-      <td class="right">₹${slip.bonus.toLocaleString("en-IN")}</td>
-      <td></td>
-      <td></td>
+      <th>Earnings</th>
+      <th class="right">Amount</th>
+      <th>Deductions</th>
+      <th class="right">Amount</th>
     </tr>
-  `
-      : ""
-  }
 
-  <tr>
-    <th>Total Earnings</th>
-    <th class="right">₹${slip.totalEarning.toLocaleString("en-IN")}</th>
-    <th>Total Deductions</th>
-    <th class="right">₹${slip.totalDeduction.toLocaleString("en-IN")}</th>
-  </tr>
-</table>
+    ${(() => {
+      const earningRows = [
+        { label: "Basic", amount: slip.basic },
+        { label: "HRA", amount: slip.hra },
+        { label: "Fuel Allowance", amount: slip.fuelAllowance },
+      ];
 
+      if (slip.bonus > 0) {
+        earningRows.push({
+          label: "Performance Incentive",
+          amount: slip.bonus,
+        });
+      }
 
-  </div>
+      const deductionRows = [
+        { label: "PF", amount: slip.pfAmount },
+        { label: "PT", amount: slip.professionalTax },
+      ];
+
+      if (slip.absentDeduction > 0) {
+        deductionRows.push({
+          label: "Absent Deduction",
+          amount: slip.absentDeduction,
+        });
+      }
+
+      slip.otherDeductions?.forEach((d: { type: any; amount: any }) => {
+        deductionRows.push({
+          label: d.type,
+          amount: d.amount,
+        });
+      });
+
+      const rowCount = Math.max(earningRows.length, deductionRows.length);
+
+      return Array.from({ length: rowCount })
+        .map((_, i) => {
+          const e = earningRows[i];
+          const d = deductionRows[i];
+
+          return `
+            <tr>
+              <td>${e ? e.label : ""}</td>
+              <td class="right">
+                ${e ? `₹${e.amount.toLocaleString("en-IN")}` : ""}
+              </td>
+              <td>${d ? d.label : ""}</td>
+              <td class="right">
+                ${d ? `₹${d.amount.toLocaleString("en-IN")}` : ""}
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+    })()}
+
+    <tr>
+  <th>Total Earnings</th>
+  <th class="right">
+    ₹${totalEarningCalc.toLocaleString("en-IN")}
+  </th>
+  <th>Total Deductions</th>
+  <th class="right">
+    ₹${totalDeductionCalc.toLocaleString("en-IN")}
+  </th>
+</tr>
+
+  </table>
+
+</div>
+
 
   <!-- NET PAY -->
   <div class="netpay-title">Net Pay</div>
-  <div class="netpay-amount">₹${slip.netSalary.toLocaleString("en-IN")}</div>
+ <div class="netpay-amount">
+  ₹${netPayCalc.toLocaleString("en-IN")}
+</div>
 
-  <div><strong>In words:</strong> ${slip.amountInWords}</div>
+  <div><strong>In words:</strong> ${convertToWords(netPayCalc)}</div>
+
 
   <div class="footer">
     This is a system-generated pay slip. Signature not required.
