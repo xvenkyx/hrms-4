@@ -30,6 +30,7 @@ import AdminLeaveReview from "./pages/Leave/AdminLeaveReview";
 import TeamLeadLeaveRequests from "./pages/Leave/TeamLeadLeaveRequests";
 import TeamLeadLeaveReview from "./pages/Leave/TeamLeadLeaveReview";
 import OtherDeductions from "./pages/OtherDeductions/OtherDeductions";
+import CASalaryCalculation from "./pages/salary/CASalaryCalculator";
 
 export default function App() {
   const { roles } = useAuth();
@@ -173,6 +174,16 @@ export default function App() {
           <AdminRoute>
             <MainLayout>
               <AdminSalaryGenerate />
+            </MainLayout>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/ca-salary-calculation"
+        element={
+          <AdminRoute>
+            <MainLayout>
+              <CASalaryCalculation />
             </MainLayout>
           </AdminRoute>
         }
