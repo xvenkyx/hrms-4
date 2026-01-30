@@ -1,3 +1,5 @@
+import { BRANCH_ADDRESS_MAP } from "@/constants/branchAddress";
+
 export function mapSlipToPDF(slip: any) {
   const daysInMonth = Number(slip.daysInMonth) || getDaysInMonth(slip.Month);
 
@@ -22,6 +24,9 @@ export function mapSlipToPDF(slip: any) {
     department: slip.department,
     designation: slip.designation,
     joiningDate: slip.joiningDate,
+
+    branch: slip.branch,
+    branchAddress: BRANCH_ADDRESS_MAP[slip.branch] ?? "—",
 
     /* -------- Bank -------- */
     bankName: slip.bankAccount?.bankName || "—",

@@ -268,9 +268,9 @@ export function buildPayslipHTML(slip: any) {
     <div class="company-details">
       <div class="header-title">JHEX Consulting LLP</div>
       <div class="sub-header">
-        FF-Block-A-103, Ganesh Meridian, Opp High Court,<br>
-        SG Highway, Ghatlodiya Ahmedabad – (380061)
+        ${slip.branchAddress}
       </div>
+
     </div>
   </div>
 
